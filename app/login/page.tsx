@@ -2,9 +2,17 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion } from "framer-motion";
-import { ArrowRight, Heart, Mail, ShieldCheck } from "lucide-react";
+import {
+  ArrowRight,
+  Eye,
+  EyeOff,
+  Heart,
+  LockKeyhole,
+  Mail,
+  ShieldCheck,
+} from "lucide-react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -16,6 +24,10 @@ import { safeNextPath } from "@/utils/auth-routing";
 
 const loginSchema = z.object({
   email: z.string().trim().email("Enter a valid email address"),
+  password: z
+    .string()
+    .min(8, "Password must contain at least 8 characters")
+    .max(72),
 });
 
 type LoginForm = z.infer<typeof loginSchema>;
@@ -29,9 +41,11 @@ export default function LoginPage() {
 }
 
 function LoginContent() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const [mode, setMode] = useState<AuthMode>("create");
   const [submitting, setSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const next = safeNextPath(
     searchParams.get("next"),
     mode === "create" ? "/onboarding" : "/home",
@@ -42,23 +56,27 @@ function LoginContent() {
     formState: { errors },
   } = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
-    defaultValues: { email: "" },
+    defaultValues: { email: "", password: "" },
   });
 
-  const submit = handleSubmit(async ({ email }) => {
+  const submit = handleSubmit(async ({ email, password }) => {
     setSubmitting(true);
     try {
-      await authService.sendEmailOtp(email, mode, next);
-      const params = new URLSearchParams({ email, mode, next });
-      window.location.assign(`/otp?${params.toString()}`);
+      if (mode === "create") {
+        await authService.createAccount(email, password);
+        toast.success("Account created", {
+          description: "Let’s build your profile.",
+        });
+      } else {
+        await authService.signIn(email, password);
+      }
+      router.replace(next);
+      router.refresh();
     } catch (error) {
-      toast.error(
-        mode === "create" ? "Couldn’t create account" : "Couldn’t log in",
-        {
-          description:
-            error instanceof Error ? error.message : "Please try again.",
-        },
-      );
+      toast.error(mode === "create" ? "Account not created" : "Login failed", {
+        description:
+          error instanceof Error ? error.message : "Please try again.",
+      });
     } finally {
       setSubmitting(false);
     }
@@ -96,8 +114,8 @@ function LoginContent() {
               Better connections.
             </h1>
             <p className="mt-4 max-w-sm text-sm leading-6 text-muted">
-              Create your profile or return to your matches with a secure,
-              password-free email link.
+              Create your profile instantly or return to your matches. No email
+              verification is required.
             </p>
           </motion.div>
 
@@ -156,6 +174,41 @@ function LoginContent() {
                 </p>
               )}
 
+              <label className="mt-4 block">
+                <span className="mb-2 block text-xs font-bold">Password</span>
+                <span className="flex h-14 items-center gap-3 rounded-input border border-border bg-surface px-4 focus-within:border-primary/40">
+                  <LockKeyhole className="size-5 text-muted" />
+                  <input
+                    {...register("password")}
+                    type={showPassword ? "text" : "password"}
+                    autoComplete={
+                      mode === "create" ? "new-password" : "current-password"
+                    }
+                    placeholder="At least 8 characters"
+                    className="min-w-0 flex-1 bg-transparent text-sm outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((current) => !current)}
+                    className="grid size-9 place-items-center text-muted"
+                    aria-label={
+                      showPassword ? "Hide password" : "Show password"
+                    }
+                  >
+                    {showPassword ? (
+                      <EyeOff className="size-4" />
+                    ) : (
+                      <Eye className="size-4" />
+                    )}
+                  </button>
+                </span>
+              </label>
+              {errors.password && (
+                <p className="mt-2 text-xs text-danger">
+                  {errors.password.message}
+                </p>
+              )}
+
               <Button
                 type="submit"
                 fullWidth
@@ -163,15 +216,15 @@ function LoginContent() {
                 loading={submitting}
                 className="mt-4"
               >
-                {mode === "create" ? "Create my account" : "Send login link"}
+                {mode === "create" ? "Create my account" : "Log in"}
                 <ArrowRight className="size-5" />
               </Button>
             </form>
 
             <div className="mt-4 flex items-start gap-2 rounded-2xl bg-primary-soft/70 p-3 text-[11px] leading-5 text-muted">
               <ShieldCheck className="mt-0.5 size-4 shrink-0 text-primary" />
-              We use a one-time link or code—no password to remember. New
-              accounts continue to onboarding automatically.
+              Accounts open immediately without a verification email. Your
+              password protects your profile and conversations.
             </div>
           </section>
         </div>

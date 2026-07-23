@@ -50,7 +50,7 @@ try {
 
   await expectRoute("/", 307, "/login");
   await expectRoute("/login", 200);
-  await expectRoute("/otp?email=test%40example.com&mode=create", 200);
+  await expectRoute("/otp", 307, "/login?next=%2Fotp");
   await expectRoute("/onboarding", 307, "/login?next=%2Fonboarding");
   await expectRoute("/home", 307, "/login?next=%2Fhome");
   await expectRoute("/discover", 307, "/login?next=%2Fdiscover");
@@ -58,13 +58,30 @@ try {
   await expectRoute("/shop", 307, "/login?next=%2Fshop");
   await expectRoute("/admin/shop", 307, "/login?next=%2Fadmin%2Fshop");
 
+  const invalidRegistration = await fetch(`${baseUrl}/api/auth/register`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Origin: baseUrl,
+    },
+    body: JSON.stringify({
+      email: "not-an-email",
+      password: "short",
+    }),
+  });
+  assert.equal(
+    invalidRegistration.status,
+    400,
+    "Registration validation route failed",
+  );
+
   const health = await fetch(`${baseUrl}/api/health`);
   assert.equal(health.status, 200, "Supabase health check failed");
   const healthBody = await health.json();
   assert.equal(healthBody.database, "connected");
 
   console.log(
-    "Smoke test passed: auth redirects, public auth pages, admin route, and Supabase health.",
+    "Smoke test passed: password auth routes, registration validation, admin protection, and Supabase health.",
   );
 } finally {
   server.kill();

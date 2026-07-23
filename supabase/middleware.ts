@@ -1,7 +1,8 @@
 import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
 
-const PUBLIC_AUTH_ROUTES = ["/login", "/otp", "/auth/callback"];
+const PUBLIC_AUTH_ROUTES = ["/login"];
+const PUBLIC_API_ROUTES = ["/api/auth/register", "/api/health"];
 
 function copyCookies(source: NextResponse, target: NextResponse) {
   source.cookies.getAll().forEach((cookie) => {
@@ -14,9 +15,13 @@ export async function updateSession(request: NextRequest) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   const { pathname, search } = request.nextUrl;
+  const isPublicApiRoute = PUBLIC_API_ROUTES.includes(pathname);
 
   if (!url || !anonKey) {
-    if (PUBLIC_AUTH_ROUTES.some((route) => pathname.startsWith(route))) {
+    if (
+      PUBLIC_AUTH_ROUTES.some((route) => pathname.startsWith(route)) ||
+      isPublicApiRoute
+    ) {
       return NextResponse.next({ request });
     }
     const loginUrl = request.nextUrl.clone();
@@ -49,9 +54,7 @@ export async function updateSession(request: NextRequest) {
   const isPublicAuthRoute = PUBLIC_AUTH_ROUTES.some((route) =>
     pathname.startsWith(route),
   );
-  const isHealthRoute = pathname.startsWith("/api/health");
-
-  if (isHealthRoute || pathname.startsWith("/auth/callback")) {
+  if (isPublicApiRoute) {
     return response;
   }
 

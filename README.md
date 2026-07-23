@@ -10,8 +10,8 @@ receive a purpose-built mobile-only message rather than a desktop layout.
 
 ## Product surfaces
 
-- Password-free email authentication and guided onboarding with language,
-  profile, photos, interests,
+- Immediate email/password authentication without verification emails, plus
+  guided onboarding with language, profile, photos, interests,
   preferences, and verification
 - AI-ranked nearby discovery with swipe and grid modes
 - Rich profiles and explainable compatibility analysis
@@ -90,10 +90,10 @@ supabase db push
 supabase functions deploy ai-assistant
 ```
 
-In Authentication → URL Configuration, add the local and deployed callback
-URLs (for example `http://localhost:3000/auth/callback` and
-`https://your-domain.com/auth/callback`). Email authentication is enabled by
-default on Supabase; phone OTP remains optional and requires an SMS provider.
+Account registration uses a server-only Supabase admin client to create a
+confirmed email/password user without sending a verification email. Keep
+`SUPABASE_SERVICE_ROLE_KEY` server-only and configure it in Vercel; never expose
+it through a `NEXT_PUBLIC_*` variable.
 
 The Shop admin panel is available at `/admin/shop` and is protected by RLS.
 After creating your account, run

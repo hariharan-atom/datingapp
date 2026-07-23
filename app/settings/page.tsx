@@ -13,17 +13,21 @@ import {
   UserX,
 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/shell/app-shell";
 import { BottomSheet } from "@/components/ui/bottom-sheet";
 import { Button } from "@/components/ui/button";
+import { authService } from "@/services/auth";
 import { useAppStore } from "@/store/app-store";
 
 export default function SettingsPage() {
+  const router = useRouter();
   const { incognito, toggleIncognito } = useAppStore();
   const [logoutOpen, setLogoutOpen] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
   const [notifications, setNotifications] = useState(true);
 
   return (
@@ -130,7 +134,7 @@ export default function SettingsPage() {
         open={logoutOpen}
         onClose={() => setLogoutOpen(false)}
         title="Log out of The Atom?"
-        description="You’ll need your phone number and OTP to sign back in."
+        description="You’ll need your email and password to sign back in."
       >
         <div className="grid grid-cols-2 gap-3">
           <Button variant="ghost" onClick={() => setLogoutOpen(false)}>
@@ -138,9 +142,23 @@ export default function SettingsPage() {
           </Button>
           <Button
             variant="danger"
-            onClick={() => {
-              setLogoutOpen(false);
-              toast.success("Logged out");
+            loading={loggingOut}
+            onClick={async () => {
+              setLoggingOut(true);
+              try {
+                await authService.signOut();
+                setLogoutOpen(false);
+                router.replace("/login");
+                router.refresh();
+              } catch (error) {
+                toast.error("Couldn’t log out", {
+                  description:
+                    error instanceof Error
+                      ? error.message
+                      : "Please try again.",
+                });
+                setLoggingOut(false);
+              }
             }}
           >
             Log out
