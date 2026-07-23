@@ -91,8 +91,10 @@ export function ProfileCard({
       duration: reduceMotion ? 0.1 : 0.18,
       ease: [0.32, 0.72, 0, 1],
     });
+    // Reset the shared deck position before React promotes the next card.
+    // Resetting it after the profile changes makes the new card flash off-screen.
+    x.jump(0);
     onSwipeComplete?.(action);
-    x.set(0);
 
     const outcome = await request;
     try {
