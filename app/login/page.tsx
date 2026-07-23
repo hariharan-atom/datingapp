@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion } from "framer-motion";
-import { ArrowRight, Eye, EyeOff, LockKeyhole, Mail } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
@@ -77,34 +77,39 @@ function LoginContent() {
   const error = searchParams.get("error");
 
   return (
-    <div className="safe-top min-h-dvh bg-[radial-gradient(circle_at_top,#dbeafe_0%,#ffffff_48%)]">
-      <main className="mx-auto flex min-h-dvh max-w-md flex-col px-5 pb-[calc(24px+var(--safe-bottom))] pt-8">
-        <div className="flex items-center gap-3">
-          <span className="grid size-12 place-items-center rounded-[18px] bg-gradient-to-br from-primary to-secondary font-black text-white shadow-glow">
+    <div className="safe-top min-h-dvh bg-[#f8f8f6]">
+      <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col px-6 pb-[calc(24px+var(--safe-bottom))] pt-6">
+        <header className="flex items-center gap-2.5">
+          <span className="grid size-9 place-items-center rounded-xl bg-primary text-sm font-black text-white">
             A
           </span>
-          <div>
-            <p className="text-lg font-black tracking-[-0.035em]">The Atom</p>
-            <p className="text-xs font-medium text-muted">
-              Meet with intention
-            </p>
-          </div>
-        </div>
+          <p className="text-base font-bold tracking-[-0.025em]">The Atom</p>
+        </header>
 
-        <div className="flex flex-1 flex-col justify-center py-8">
+        <div className="flex flex-1 flex-col justify-center py-10">
           <motion.div
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
           >
-            <h1 className="text-[38px] font-black leading-[1.05] tracking-[-0.055em]">
-              Real people.
-              <br />
-              Better connections.
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">
+              Dating with intention
+            </p>
+            <h1 className="mt-3 max-w-sm text-[40px] font-bold leading-[1.04] tracking-[-0.05em] text-ink">
+              Meet someone real.
             </h1>
+            <p className="mt-4 max-w-sm text-[15px] leading-6 text-muted">
+              A thoughtful place for genuine conversations and meaningful
+              connections.
+            </p>
           </motion.div>
 
-          <section className="mt-8 rounded-[28px] border border-white/80 bg-white/90 p-4 shadow-float backdrop-blur-xl">
-            <div className="grid grid-cols-2 rounded-[18px] bg-surface p-1">
+          <section className="mt-9">
+            <div
+              role="tablist"
+              aria-label="Authentication mode"
+              className="grid grid-cols-2 border-b border-border"
+            >
               {[
                 { value: "create" as const, label: "Create account" },
                 { value: "login" as const, label: "Log in" },
@@ -113,13 +118,22 @@ function LoginContent() {
                   type="button"
                   key={item.value}
                   onClick={() => setMode(item.value)}
-                  className={`h-11 rounded-[15px] text-sm font-bold transition-all ${
+                  role="tab"
+                  aria-selected={mode === item.value}
+                  aria-controls="auth-form"
+                  className={`relative h-12 text-sm font-semibold transition-colors ${
                     mode === item.value
-                      ? "bg-white text-primary shadow-soft"
-                      : "text-muted"
+                      ? "text-ink"
+                      : "text-muted hover:text-ink"
                   }`}
                 >
                   {item.label}
+                  {mode === item.value && (
+                    <motion.span
+                      layoutId="active-auth-mode"
+                      className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-primary"
+                    />
+                  )}
                 </button>
               ))}
             </div>
@@ -127,7 +141,7 @@ function LoginContent() {
             {error && (
               <p
                 role="alert"
-                className="mt-4 rounded-2xl bg-red-50 px-3 py-2.5 text-xs leading-5 text-danger"
+                className="mt-5 rounded-xl border border-red-100 bg-red-50 px-3.5 py-3 text-xs leading-5 text-danger"
               >
                 {error === "configuration"
                   ? "Authentication is not configured on this deployment."
@@ -135,22 +149,19 @@ function LoginContent() {
               </p>
             )}
 
-            <form onSubmit={submit} className="mt-5">
-              <label>
-                <span className="mb-2 block text-xs font-bold">
+            <form id="auth-form" onSubmit={submit} className="mt-7">
+              <label className="block">
+                <span className="mb-2 block text-sm font-semibold">
                   Email address
                 </span>
-                <span className="flex h-14 items-center gap-3 rounded-input border border-border bg-surface px-4 focus-within:border-primary/40">
-                  <Mail className="size-5 text-muted" />
-                  <input
-                    {...register("email")}
-                    type="email"
-                    inputMode="email"
-                    autoComplete="email"
-                    placeholder="you@example.com"
-                    className="min-w-0 flex-1 bg-transparent text-sm outline-none"
-                  />
-                </span>
+                <input
+                  {...register("email")}
+                  type="email"
+                  inputMode="email"
+                  autoComplete="email"
+                  placeholder="you@example.com"
+                  className="h-14 w-full rounded-2xl border border-border bg-white px-4 text-[15px] outline-none transition placeholder:text-muted/70 focus:border-primary/50 focus:ring-4 focus:ring-primary/5"
+                />
               </label>
               {errors.email && (
                 <p className="mt-2 text-xs text-danger">
@@ -158,10 +169,11 @@ function LoginContent() {
                 </p>
               )}
 
-              <label className="mt-4 block">
-                <span className="mb-2 block text-xs font-bold">Password</span>
-                <span className="flex h-14 items-center gap-3 rounded-input border border-border bg-surface px-4 focus-within:border-primary/40">
-                  <LockKeyhole className="size-5 text-muted" />
+              <label className="mt-5 block">
+                <span className="mb-2 block text-sm font-semibold">
+                  Password
+                </span>
+                <span className="relative block">
                   <input
                     {...register("password")}
                     type={showPassword ? "text" : "password"}
@@ -169,12 +181,12 @@ function LoginContent() {
                       mode === "create" ? "new-password" : "current-password"
                     }
                     placeholder="At least 8 characters"
-                    className="min-w-0 flex-1 bg-transparent text-sm outline-none"
+                    className="h-14 w-full rounded-2xl border border-border bg-white px-4 pr-14 text-[15px] outline-none transition placeholder:text-muted/70 focus:border-primary/50 focus:ring-4 focus:ring-primary/5"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword((current) => !current)}
-                    className="grid size-9 place-items-center text-muted"
+                    className="absolute right-2.5 top-1/2 grid size-9 -translate-y-1/2 place-items-center rounded-lg text-muted transition-colors hover:bg-surface hover:text-ink"
                     aria-label={
                       showPassword ? "Hide password" : "Show password"
                     }
@@ -198,18 +210,20 @@ function LoginContent() {
                 fullWidth
                 size="lg"
                 loading={submitting}
-                className="mt-4"
+                className="mt-6 rounded-2xl bg-primary shadow-none [background-image:none] hover:bg-primary-hover"
               >
-                {mode === "create" ? "Create my account" : "Log in"}
-                <ArrowRight className="size-5" />
+                {mode === "create" ? "Create account" : "Log in"}
               </Button>
             </form>
           </section>
         </div>
 
-        <p className="text-center text-[11px] leading-5 text-muted">
+        <p className="mx-auto max-w-xs text-center text-[11px] leading-5 text-muted">
           By continuing, you confirm you’re 18+ and agree to our{" "}
-          <Link href="/settings/legal" className="font-bold text-ink">
+          <Link
+            href="/settings/legal"
+            className="font-semibold text-ink underline decoration-border underline-offset-2"
+          >
             Terms and Privacy Policy
           </Link>
           .
