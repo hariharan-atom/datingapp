@@ -7,7 +7,9 @@ interface AppShellProps {
   title: string;
   children: React.ReactNode;
   back?: boolean;
-  right?: "notifications" | "search" | "filters" | "profile" | "safety";
+  right?:
+    "notifications" | "messages" | "search" | "filters" | "profile" | "safety";
+  onRightClick?: () => void;
   subtitle?: string;
   hideNav?: boolean;
   hideAi?: boolean;
@@ -18,6 +20,7 @@ export function AppShell({
   children,
   back,
   right,
+  onRightClick,
   subtitle,
   hideNav,
   hideAi,
@@ -28,6 +31,7 @@ export function AppShell({
         title={title}
         back={back}
         right={right}
+        onRightClick={onRightClick}
         subtitle={subtitle}
       />
       <PageTransition>

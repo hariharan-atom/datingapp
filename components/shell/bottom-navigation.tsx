@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import {
   Compass,
   Home,
-  MessageCircle,
+  ShoppingBag,
   UserRound,
   UsersRound,
 } from "lucide-react";
@@ -17,7 +17,7 @@ const navItems = [
   { label: "Home", href: "/home", icon: Home },
   { label: "Explore", href: "/discover", icon: Compass },
   { label: "Groups", href: "/groups", icon: UsersRound },
-  { label: "Messages", href: "/messages", icon: MessageCircle, badge: 2 },
+  { label: "Shop", href: "/shop", icon: ShoppingBag },
   { label: "Profile", href: "/profile", icon: UserRound },
 ];
 
@@ -25,8 +25,8 @@ export function BottomNavigation() {
   const pathname = usePathname();
 
   return (
-    <nav className="safe-bottom fixed inset-x-0 bottom-0 z-40 mx-auto max-w-[1024px] px-3 pb-3">
-      <div className="glass grid h-[74px] grid-cols-5 rounded-[26px] border border-white/80 px-1 shadow-float">
+    <nav className="fixed inset-x-0 bottom-[max(4px,calc(var(--safe-bottom)-10px))] z-40 mx-auto max-w-[1024px] px-3">
+      <div className="glass grid h-16 grid-cols-5 rounded-[26px] border border-white/80 px-1 shadow-float">
         {navItems.map((item) => {
           const active =
             pathname === item.href ||
@@ -36,42 +36,30 @@ export function BottomNavigation() {
             <Link
               href={item.href}
               key={item.href}
-              className="relative grid min-w-0 grid-rows-[44px_16px] place-items-center px-0.5 pb-1 pt-1.5"
+              className="relative grid min-w-0 place-items-center"
               aria-label={item.label}
+              aria-current={active ? "page" : undefined}
             >
               {active && (
                 <motion.span
                   layoutId="active-nav"
                   transition={{ type: "spring", stiffness: 480, damping: 35 }}
-                  className="absolute top-1.5 size-10 rounded-[15px] bg-gradient-to-br from-primary to-secondary shadow-[0_8px_20px_rgba(37,99,235,0.28)]"
+                  className="absolute size-12 rounded-[17px] bg-gradient-to-br from-primary to-secondary shadow-[0_8px_20px_rgba(37,99,235,0.28)]"
                 />
               )}
               <motion.span
                 animate={{ scale: active ? 1.08 : 1 }}
-                className="relative z-10 grid size-10 place-items-center self-start"
+                className="relative z-10 grid size-12 place-items-center"
               >
                 <Icon
                   className={cn(
-                    "size-5 transition-colors",
+                    "size-[22px] transition-colors",
                     active ? "text-white" : "text-muted",
                   )}
                   fill="none"
                   strokeWidth={active ? 2.25 : 2}
                 />
-                {!!item.badge && !active && (
-                  <span className="absolute -right-2 -top-2 grid min-w-4 place-items-center rounded-full bg-primary px-1 text-[9px] font-bold leading-4 text-white">
-                    {item.badge}
-                  </span>
-                )}
               </motion.span>
-              <span
-                className={cn(
-                  "relative z-10 max-w-full self-end truncate text-[10px] font-semibold leading-none",
-                  active ? "text-primary" : "text-muted",
-                )}
-              >
-                {item.label}
-              </span>
             </Link>
           );
         })}

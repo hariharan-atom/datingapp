@@ -12,6 +12,7 @@ const allCapabilities: ProductCapability[] = [
   "groups",
   "events",
   "gifts",
+  "shop",
 ];
 
 /**

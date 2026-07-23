@@ -84,3 +84,16 @@ export interface Gift {
   value: string;
   color: string;
 }
+
+export interface ShopProduct {
+  id: string;
+  name: string;
+  description: string;
+  category: "Flowers" | "Food" | "Keepsakes";
+  pricePaise: number;
+  compareAtPricePaise?: number;
+  image: string;
+  badge?: string;
+  rating: number;
+  stock: number;
+}

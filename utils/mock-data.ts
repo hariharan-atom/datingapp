@@ -5,6 +5,7 @@ import type {
   Gift,
   NearbyEvent,
   Profile,
+  ShopProduct,
 } from "@/types/domain";
 
 export const profiles: Profile[] = [
@@ -305,5 +306,65 @@ export const gifts: Gift[] = [
     description: "Artisan chocolate selection",
     value: "₹449",
     color: "bg-orange-50",
+  },
+];
+
+export const shopProducts: ShopProduct[] = [
+  {
+    id: "blue-bloom-bouquet",
+    name: "Blue Bloom Bouquet",
+    description: "Fresh white and powder-blue flowers, wrapped by hand.",
+    category: "Flowers",
+    pricePaise: 149900,
+    compareAtPricePaise: 179900,
+    image: "/images/shop/blue-bloom-bouquet.webp",
+    badge: "Bestseller",
+    rating: 4.9,
+    stock: 18,
+  },
+  {
+    id: "coffee-date-kit",
+    name: "Coffee Date Kit",
+    description: "Artisan coffee, two ceramic cups, and cookies for two.",
+    category: "Food",
+    pricePaise: 129900,
+    image: "/images/shop/coffee-date-kit.webp",
+    badge: "Date night",
+    rating: 4.8,
+    stock: 24,
+  },
+  {
+    id: "midnight-chocolate-box",
+    name: "Midnight Chocolate Box",
+    description:
+      "A generous selection of handcrafted milk and dark chocolates.",
+    category: "Food",
+    pricePaise: 89900,
+    compareAtPricePaise: 109900,
+    image: "/images/shop/midnight-chocolate-box.webp",
+    rating: 4.9,
+    stock: 32,
+  },
+  {
+    id: "together-journal",
+    name: "Together Journal",
+    description: "A linen-bound journal for memories, plans, and little notes.",
+    category: "Keepsakes",
+    pricePaise: 69900,
+    image: "/images/shop/together-journal.webp",
+    badge: "New",
+    rating: 4.7,
+    stock: 16,
+  },
+  {
+    id: "celebration-cake",
+    name: "Celebration Cake for Two",
+    description: "A small vanilla cake with blue ombré buttercream.",
+    category: "Food",
+    pricePaise: 79900,
+    image: "/images/shop/celebration-cake.webp",
+    badge: "Same day",
+    rating: 4.8,
+    stock: 10,
   },
 ];

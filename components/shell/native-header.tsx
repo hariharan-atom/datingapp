@@ -4,6 +4,7 @@ import { motion, useMotionValueEvent, useScroll } from "framer-motion";
 import {
   Bell,
   ChevronLeft,
+  MessageCircle,
   Search,
   ShieldCheck,
   SlidersHorizontal,
@@ -16,7 +17,8 @@ import { Avatar } from "@/components/ui/avatar";
 interface NativeHeaderProps {
   title: string;
   back?: boolean;
-  right?: "notifications" | "search" | "filters" | "profile" | "safety";
+  right?:
+    "notifications" | "messages" | "search" | "filters" | "profile" | "safety";
   onRightClick?: () => void;
   subtitle?: string;
 }
@@ -36,6 +38,7 @@ export function NativeHeader({
 
   const icon = {
     notifications: Bell,
+    messages: MessageCircle,
     search: Search,
     filters: SlidersHorizontal,
     safety: ShieldCheck,
@@ -100,9 +103,11 @@ export function NativeHeader({
                   router.push(
                     right === "notifications"
                       ? "/notifications"
-                      : right === "search"
-                        ? "/search"
-                        : "/settings/safety",
+                      : right === "messages"
+                        ? "/messages"
+                        : right === "search"
+                          ? "/search"
+                          : "/settings/safety",
                   ))
               }
               aria-label={right}
@@ -111,6 +116,11 @@ export function NativeHeader({
               <RightIcon className="size-[19px]" />
               {right === "notifications" && (
                 <span className="absolute right-2 top-2 size-2 rounded-full border border-white bg-primary" />
+              )}
+              {right === "messages" && (
+                <span className="absolute -right-1 -top-1 grid min-w-5 place-items-center rounded-full border-2 border-white bg-primary px-1 text-[10px] font-bold leading-4 text-white">
+                  2
+                </span>
               )}
             </button>
           )}

@@ -21,6 +21,7 @@ receive a purpose-built mobile-only message rather than a desktop layout.
 - Nearby events with Leaflet and OpenStreetMap
 - Search across people, groups, interests, occupations, and places
 - Gifts and claim lifecycle
+- Admin-managed Shop catalog, cart, and customer ordering
 - Notifications, profile editing, settings, privacy, blocking, reporting,
   incognito mode, and a safety centre
 - PWA service worker, loading/error/empty states, and safe-area support

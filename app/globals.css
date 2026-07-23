@@ -64,7 +64,7 @@ select:focus-visible {
   }
 
   .pb-nav {
-    padding-bottom: calc(112px + var(--safe-bottom));
+    padding-bottom: calc(88px + var(--safe-bottom));
   }
 
   .glass {

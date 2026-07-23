@@ -9,7 +9,8 @@ export type ProductCapability =
   | "ai_date_planner"
   | "groups"
   | "events"
-  | "gifts";
+  | "gifts"
+  | "shop";
 
 export interface Entitlement {
   capability: ProductCapability;
