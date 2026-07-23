@@ -2,26 +2,32 @@
 
 import {
   Grid2X2,
+  RefreshCw,
   SlidersHorizontal,
   Sparkles,
   SquareStack,
+  Users,
 } from "lucide-react";
 import { useState } from "react";
 
 import { AppShell } from "@/components/shell/app-shell";
 import { Chip } from "@/components/ui/chip";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Skeleton } from "@/components/ui/skeleton";
 import { FilterSheet } from "@/features/discovery/components/filter-sheet";
 import { ProfileCard } from "@/features/discovery/components/profile-card";
 import { MatchOverlay } from "@/features/matches/components/match-overlay";
+import { useDiscovery } from "@/hooks/use-discovery";
 import type { Profile } from "@/types/domain";
-import { profiles } from "@/utils/mock-data";
 
 export default function DiscoverPage() {
   const [view, setView] = useState<"swipe" | "grid">("swipe");
   const [filterOpen, setFilterOpen] = useState(false);
   const [index, setIndex] = useState(0);
   const [match, setMatch] = useState<Profile | null>(null);
-  const current = profiles[index % profiles.length];
+  const discovery = useDiscovery({});
+  const profiles = discovery.data?.pages.flat() ?? [];
+  const current = profiles[index];
 
   const next = () => setIndex((value) => value + 1);
 
@@ -56,15 +62,35 @@ export default function DiscoverPage() {
           </button>
         </div>
 
-        {view === "swipe" ? (
+        {discovery.isLoading ? (
+          <div className="mx-auto mt-4 max-w-xl">
+            <Skeleton className="h-[560px] rounded-[28px]" />
+          </div>
+        ) : discovery.isError ? (
+          <EmptyState
+            icon={RefreshCw}
+            title="Couldn’t load profiles"
+            description="Check your connection and try discovery again."
+            action="Try again"
+            onAction={() => void discovery.refetch()}
+          />
+        ) : !profiles.length || !current ? (
+          <EmptyState
+            icon={Users}
+            title="You’re early"
+            description="No new completed profiles are available yet. Invite your friends—each profile will appear here after onboarding."
+            action="Refresh"
+            onAction={() => void discovery.refetch()}
+          />
+        ) : view === "swipe" ? (
           <div className="mx-auto mt-4 max-w-xl">
             <div className="mb-3 flex items-center justify-between px-1">
               <p className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted">
                 <Sparkles className="size-3.5 text-secondary" />
-                AI-curated for you
+                Recommended for you
               </p>
               <p className="text-xs font-semibold text-muted">
-                {index + 1} of {profiles.length * 3}
+                {index + 1} of {profiles.length}
               </p>
             </div>
             <ProfileCard
@@ -72,8 +98,8 @@ export default function DiscoverPage() {
               profile={current}
               swipeable
               onPass={next}
-              onLike={() => {
-                if (index % 2 === 0) setMatch(current);
+              onLike={(result) => {
+                if (result.matched) setMatch(current);
                 next();
               }}
             />
@@ -83,12 +109,8 @@ export default function DiscoverPage() {
           </div>
         ) : (
           <div className="mt-5 grid grid-cols-2 gap-3 min-[768px]:grid-cols-3">
-            {[...profiles, ...profiles].map((profile, itemIndex) => (
-              <ProfileCard
-                key={`${profile.id}-${itemIndex}`}
-                profile={profile}
-                compact
-              />
+            {profiles.map((profile) => (
+              <ProfileCard key={profile.id} profile={profile} compact />
             ))}
           </div>
         )}

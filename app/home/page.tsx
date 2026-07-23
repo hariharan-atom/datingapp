@@ -15,10 +15,18 @@ import { AppShell } from "@/components/shell/app-shell";
 import { Avatar } from "@/components/ui/avatar";
 import { Chip } from "@/components/ui/chip";
 import { SectionHeading } from "@/components/ui/section-heading";
+import { Skeleton } from "@/components/ui/skeleton";
 import { ProfileCard } from "@/features/discovery/components/profile-card";
-import { communities, events, profiles } from "@/utils/mock-data";
+import { useCurrentProfile } from "@/hooks/use-current-profile";
+import { useDiscovery } from "@/hooks/use-discovery";
+import { communities, events } from "@/utils/mock-data";
 
 export default function HomePage() {
+  const discovery = useDiscovery({});
+  const currentProfile = useCurrentProfile();
+  const profiles = discovery.data?.pages.flat() ?? [];
+  const profileScore = currentProfile.data?.profile.compatibility ?? 0;
+
   return (
     <AppShell title="The Atom" right="notifications">
       <div className="space-y-8 px-4 pt-4 min-[768px]:px-6">
@@ -33,7 +41,9 @@ export default function HomePage() {
               </h2>
             </div>
             <div className="rounded-2xl bg-primary-soft px-3 py-2 text-center">
-              <p className="text-lg font-black text-primary">12</p>
+              <p className="text-lg font-black text-primary">
+                {profiles.length}
+              </p>
               <p className="text-[9px] font-bold uppercase tracking-wider text-primary/70">
                 New
               </p>
@@ -53,7 +63,7 @@ export default function HomePage() {
                 For you
               </span>
             </Link>
-            {profiles.map((profile) => (
+            {profiles.slice(0, 8).map((profile) => (
               <Link
                 href={`/discover/${profile.id}`}
                 key={profile.id}
@@ -83,7 +93,25 @@ export default function HomePage() {
             <Chip icon={<ShieldCheck className="size-3.5" />}>Verified</Chip>
             <Chip icon={<Zap className="size-3.5" />}>Active now</Chip>
           </div>
-          <ProfileCard profile={profiles[0]} />
+          {discovery.isLoading ? (
+            <Skeleton className="h-[560px] rounded-[28px]" />
+          ) : profiles[0] ? (
+            <ProfileCard profile={profiles[0]} />
+          ) : (
+            <div className="rounded-card border border-dashed border-primary/20 bg-primary-soft/40 px-6 py-10 text-center">
+              <p className="font-bold">Your community is growing</p>
+              <p className="mt-2 text-sm leading-6 text-muted">
+                Completed profiles from your friends will appear here
+                automatically.
+              </p>
+              <Link
+                href="/discover"
+                className="mt-4 inline-flex text-sm font-bold text-primary"
+              >
+                Check discovery
+              </Link>
+            </div>
+          )}
         </section>
 
         <section>
@@ -93,7 +121,7 @@ export default function HomePage() {
             href="/discover"
           />
           <div className="mt-4 grid grid-cols-2 gap-3 min-[768px]:grid-cols-3">
-            {profiles.slice(1).map((profile) => (
+            {profiles.slice(1, 7).map((profile) => (
               <ProfileCard key={profile.id} profile={profile} compact />
             ))}
           </div>
@@ -107,7 +135,7 @@ export default function HomePage() {
                 Profile assistant
               </span>
               <h2 className="mt-4 text-2xl font-bold tracking-tight">
-                Your profile is 82% strong
+                Your profile is {profileScore}% strong
               </h2>
               <p className="mt-2 max-w-sm text-sm leading-6 text-white/70">
                 Add one prompt answer and a candid photo to get seen by more
@@ -142,10 +170,10 @@ export default function HomePage() {
                   strokeWidth="8"
                   strokeLinecap="round"
                   strokeDasharray="270"
-                  strokeDashoffset="49"
+                  strokeDashoffset={270 - profileScore * 2.7}
                 />
               </svg>
-              <span className="text-xl font-black">82</span>
+              <span className="text-xl font-black">{profileScore}</span>
             </div>
           </div>
         </section>

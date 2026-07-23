@@ -1,12 +1,14 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   CalendarHeart,
   Camera,
   ChevronLeft,
   Gift,
   Image as ImageIcon,
+  MessageCircle,
   Mic,
   MoreHorizontal,
   Phone,
@@ -16,19 +18,30 @@ import {
   Sparkles,
   Video,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 import { Avatar } from "@/components/ui/avatar";
 import { BottomSheet } from "@/components/ui/bottom-sheet";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Skeleton } from "@/components/ui/skeleton";
 import { AiReplySheet } from "@/features/chat/components/ai-reply-sheet";
 import { DatePlannerSheet } from "@/features/dates/components/date-planner-sheet";
-import { chatMessages as initialMessages, profiles } from "@/utils/mock-data";
+import { chatService } from "@/services/chat";
+import type { ChatMessage } from "@/types/domain";
 
 export default function ChatPage() {
   const router = useRouter();
-  const profile = profiles[0];
-  const [messages, setMessages] = useState(initialMessages);
+  const params = useParams<{ id: string }>();
+  const queryClient = useQueryClient();
+  const chatQuery = useQuery({
+    queryKey: ["chat", params.id],
+    queryFn: () => chatService.getChat(params.id),
+  });
+  const profile = chatQuery.data?.profile;
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [draft, setDraft] = useState("");
+  const [sending, setSending] = useState(false);
   const [aiOpen, setAiOpen] = useState(false);
   const [dateOpen, setDateOpen] = useState(false);
   const [attachOpen, setAttachOpen] = useState(false);
@@ -38,23 +51,64 @@ export default function ChatPage() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const send = () => {
-    if (!draft.trim()) return;
-    setMessages((current) => [
-      ...current,
-      {
-        id: crypto.randomUUID(),
-        sender: "me",
-        body: draft.trim(),
-        sentAt: new Date().toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
-        status: "sent",
-      },
-    ]);
+  useEffect(() => {
+    if (chatQuery.data) setMessages(chatQuery.data.messages);
+  }, [chatQuery.data]);
+
+  useEffect(
+    () =>
+      chatService.subscribe(params.id, () => {
+        void queryClient.invalidateQueries({ queryKey: ["chat", params.id] });
+        void queryClient.invalidateQueries({ queryKey: ["conversations"] });
+      }),
+    [params.id, queryClient],
+  );
+
+  const send = async () => {
+    const body = draft.trim();
+    if (!body || sending) return;
+    setSending(true);
     setDraft("");
+    try {
+      const message = await chatService.sendMessage(params.id, body);
+      setMessages((current) => [...current, message]);
+      void queryClient.invalidateQueries({ queryKey: ["conversations"] });
+    } catch (error) {
+      setDraft(body);
+      toast.error(
+        error instanceof Error ? error.message : "Message could not be sent.",
+      );
+    } finally {
+      setSending(false);
+    }
   };
+
+  if (chatQuery.isLoading) {
+    return (
+      <div className="flex h-dvh flex-col bg-white p-4">
+        <Skeleton className="h-16 rounded-card" />
+        <div className="mt-auto space-y-3">
+          <Skeleton className="ml-auto h-16 w-2/3 rounded-card" />
+          <Skeleton className="h-16 w-2/3 rounded-card" />
+          <Skeleton className="h-14 rounded-card" />
+        </div>
+      </div>
+    );
+  }
+
+  if (!profile) {
+    return (
+      <div className="grid h-dvh place-items-center bg-white">
+        <EmptyState
+          icon={MessageCircle}
+          title="Conversation unavailable"
+          description="This conversation may have been removed."
+          action="Back to messages"
+          onAction={() => router.replace("/messages")}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-dvh flex-col bg-[linear-gradient(180deg,#fff_0%,#eff6ff_100%)]">
@@ -115,25 +169,17 @@ export default function ChatPage() {
         <div className="mx-auto max-w-2xl">
           <div className="my-2 text-center">
             <span className="rounded-full bg-white px-3 py-1 text-[10px] font-semibold text-muted shadow-sm">
-              You matched on 20 July
+              You matched on The Atom
             </span>
           </div>
-          <div className="my-5 rounded-card border border-secondary/10 bg-white p-4 shadow-soft">
-            <div className="flex items-start gap-3">
-              <span className="grid size-10 shrink-0 place-items-center rounded-2xl bg-secondary/10 text-secondary">
-                <Sparkles className="size-5" />
-              </span>
-              <div>
-                <p className="text-xs font-bold uppercase tracking-wider text-secondary">
-                  Conversation spark
-                </p>
-                <p className="mt-1 text-sm leading-5 text-muted">
-                  You both mentioned coffee and city walks. Ask about a favorite
-                  hidden spot.
-                </p>
-              </div>
+          {!messages.length && (
+            <div className="my-5 rounded-card border border-secondary/10 bg-white p-4 text-center shadow-soft">
+              <p className="text-sm font-bold">It is a match</p>
+              <p className="mt-1 text-sm leading-5 text-muted">
+                Start with a friendly hello and be yourself.
+              </p>
             </div>
-          </div>
+          )}
           <div className="space-y-3">
             {messages.map((message) => (
               <motion.div
@@ -211,7 +257,7 @@ export default function ChatPage() {
               onKeyDown={(event) => {
                 if (event.key === "Enter" && !event.shiftKey) {
                   event.preventDefault();
-                  send();
+                  void send();
                 }
               }}
               rows={1}
@@ -224,7 +270,8 @@ export default function ChatPage() {
           </label>
           <button
             type="button"
-            onClick={draft.trim() ? send : undefined}
+            onClick={draft.trim() ? () => void send() : undefined}
+            disabled={sending}
             aria-label={draft.trim() ? "Send message" : "Record voice note"}
             className="grid size-11 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-primary to-secondary text-white shadow-soft"
           >

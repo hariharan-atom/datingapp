@@ -16,7 +16,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { IconButton } from "@/components/ui/icon-button";
-import { useAppStore } from "@/store/app-store";
+import { profileService, type ProfileActionResult } from "@/services/profiles";
 import type { Profile } from "@/types/domain";
 import { cn } from "@/utils/cn";
 
@@ -24,8 +24,8 @@ interface ProfileCardProps {
   profile: Profile;
   compact?: boolean;
   swipeable?: boolean;
-  onPass?: () => void;
-  onLike?: () => void;
+  onPass?: (result: ProfileActionResult) => void;
+  onLike?: (result: ProfileActionResult) => void;
 }
 
 export function ProfileCard({
@@ -40,15 +40,73 @@ export function ProfileCard({
   const likeOpacity = useTransform(x, [20, 130], [0, 1]);
   const passOpacity = useTransform(x, [-130, -20], [1, 0]);
   const [dragging, setDragging] = useState(false);
-  const { bookmarkedProfiles, toggleBookmark, addLike } = useAppStore();
-  const saved = bookmarkedProfiles.includes(profile.id);
+  const [saved, setSaved] = useState(false);
+  const [acting, setActing] = useState(false);
 
-  const like = () => {
-    addLike(profile.id);
-    toast.success(`You liked ${profile.name}`, {
-      description: "We’ll let you know if it’s a match.",
-    });
-    onLike?.();
+  const like = async (kind: "like" | "super_like" = "like") => {
+    if (acting) return;
+    setActing(true);
+    try {
+      const result = await profileService.act(profile.id, kind);
+      toast.success(
+        result.matched
+          ? `You matched with ${profile.name}!`
+          : kind === "super_like"
+            ? `You super liked ${profile.name}`
+            : `You liked ${profile.name}`,
+        {
+          description: result.matched
+            ? "Start a conversation from Messages."
+            : "We’ll let you know if it’s a match.",
+        },
+      );
+      onLike?.(result);
+    } catch (error) {
+      toast.error("Couldn’t save your like", {
+        description:
+          error instanceof Error ? error.message : "Please try again.",
+      });
+    } finally {
+      setActing(false);
+    }
+  };
+
+  const pass = async () => {
+    if (acting) return;
+    setActing(true);
+    try {
+      const result = await profileService.act(profile.id, "pass");
+      onPass?.(result);
+    } catch (error) {
+      toast.error("Couldn’t pass this profile", {
+        description:
+          error instanceof Error ? error.message : "Please try again.",
+      });
+    } finally {
+      setActing(false);
+    }
+  };
+
+  const bookmark = async () => {
+    if (acting) return;
+    const nextSaved = !saved;
+    setSaved(nextSaved);
+    setActing(true);
+    try {
+      await profileService.act(
+        profile.id,
+        nextSaved ? "bookmark" : "unbookmark",
+      );
+      toast.success(nextSaved ? "Profile saved" : "Bookmark removed");
+    } catch (error) {
+      setSaved(!nextSaved);
+      toast.error("Couldn’t update the bookmark", {
+        description:
+          error instanceof Error ? error.message : "Please try again.",
+      });
+    } finally {
+      setActing(false);
+    }
   };
 
   if (compact) {
@@ -75,7 +133,9 @@ export function ProfileCard({
           </div>
           <p className="mt-0.5 flex items-center gap-1 text-[11px] text-white/80">
             <MapPin className="size-3" />
-            {profile.distanceKm} km away
+            {profile.distanceKm > 0
+              ? `${profile.distanceKm} km away`
+              : profile.city}
           </p>
         </div>
         {profile.online && (
@@ -96,8 +156,8 @@ export function ProfileCard({
       onDragStart={() => setDragging(true)}
       onDragEnd={(_, info) => {
         setDragging(false);
-        if (info.offset.x > 110) like();
-        if (info.offset.x < -110) onPass?.();
+        if (info.offset.x > 110) void like();
+        if (info.offset.x < -110) void pass();
       }}
       className={cn(
         "relative overflow-hidden rounded-[28px] bg-white shadow-float",
@@ -157,7 +217,10 @@ export function ProfileCard({
           </div>
           <p className="mt-1 flex items-center gap-1.5 text-sm text-white/80">
             <MapPin className="size-4" />
-            {profile.distanceKm} km away · {profile.occupation}
+            {profile.distanceKm > 0
+              ? `${profile.distanceKm} km away`
+              : profile.city}{" "}
+            · {profile.occupation}
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
             {profile.interests.slice(0, 3).map((interest) => (
@@ -175,30 +238,34 @@ export function ProfileCard({
         <IconButton
           icon={X}
           label="Pass"
-          onClick={onPass}
+          onClick={() => void pass()}
           size="md"
           className="text-muted"
+          disabled={acting}
         />
         <IconButton
           icon={Star}
           label="Super like"
           size="lg"
           className="border-secondary/10 bg-secondary/10 text-secondary shadow-none"
-          onClick={() => toast.success(`Super liked ${profile.name}`)}
+          onClick={() => void like("super_like")}
+          disabled={acting}
         />
         <IconButton
           icon={Heart}
           label="Like"
-          onClick={like}
+          onClick={() => void like()}
           size="lg"
           className="border-0 bg-gradient-to-br from-primary to-[#60A5FA] text-white shadow-glow"
+          disabled={acting}
         />
         <IconButton
           icon={Bookmark}
           label="Bookmark"
           size="md"
           active={saved}
-          onClick={() => toggleBookmark(profile.id)}
+          onClick={() => void bookmark()}
+          disabled={acting}
         />
       </div>
     </motion.article>

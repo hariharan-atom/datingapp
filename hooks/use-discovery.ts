@@ -9,7 +9,6 @@ export function useDiscovery(filters: DiscoveryFilters) {
     queryKey: ["discovery", filters],
     queryFn: () => profileService.getDiscoveryProfiles(filters),
     initialPageParam: 0,
-    getNextPageParam: (lastPage, allPages) =>
-      lastPage.length ? allPages.length : undefined,
+    getNextPageParam: () => undefined,
   });
 }

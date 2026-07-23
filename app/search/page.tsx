@@ -16,11 +16,17 @@ import { Avatar } from "@/components/ui/avatar";
 import { Chip } from "@/components/ui/chip";
 import { EmptyState } from "@/components/ui/empty-state";
 import { SearchField } from "@/components/ui/search-field";
-import { communities, profiles } from "@/utils/mock-data";
+import { useDiscovery } from "@/hooks/use-discovery";
+import { communities } from "@/utils/mock-data";
 
 export default function SearchPage() {
   const [query, setQuery] = useState("");
   const [type, setType] = useState("All");
+  const discoveryQuery = useDiscovery({});
+  const profiles = useMemo(
+    () => discoveryQuery.data?.pages.flat() ?? [],
+    [discoveryQuery.data],
+  );
   const profileResults = useMemo(
     () =>
       profiles.filter((profile) =>
@@ -29,7 +35,7 @@ export default function SearchPage() {
           .toLowerCase()
           .includes(query.toLowerCase()),
       ),
-    [query],
+    [profiles, query],
   );
 
   return (

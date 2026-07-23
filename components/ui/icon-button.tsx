@@ -13,6 +13,7 @@ interface IconButtonProps {
   badge?: number;
   size?: "sm" | "md" | "lg";
   active?: boolean;
+  disabled?: boolean;
 }
 
 export function IconButton({
@@ -23,6 +24,7 @@ export function IconButton({
   badge,
   size = "md",
   active,
+  disabled,
 }: IconButtonProps) {
   const sizes = {
     sm: "size-9 rounded-[14px]",
@@ -35,9 +37,10 @@ export function IconButton({
       type="button"
       aria-label={label}
       onClick={onClick}
+      disabled={disabled}
       whileTap={{ scale: 0.9 }}
       className={cn(
-        "relative grid place-items-center border border-border bg-white text-ink shadow-soft",
+        "relative grid place-items-center border border-border bg-white text-ink shadow-soft disabled:pointer-events-none disabled:opacity-50",
         sizes[size],
         active && "border-primary/20 bg-primary-soft text-primary",
         className,

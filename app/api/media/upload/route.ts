@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
 
 import { createAdminClient } from "@/supabase/admin";
-import { createClient as createServerClient } from "@/supabase/server";
+import { authenticateRequest } from "@/supabase/request-auth";
 
 const MAX_USER_IMAGE_BYTES = 150 * 1024;
 const uploadSchema = z.object({
@@ -86,23 +86,6 @@ function detectImageFormat(bytes: Uint8Array): EncodedImageFormat | null {
   return null;
 }
 
-async function getAuthenticatedUser(request: NextRequest) {
-  const admin = createAdminClient();
-  const authorization = request.headers.get("authorization");
-  const token = authorization?.startsWith("Bearer ")
-    ? authorization.slice(7).trim()
-    : undefined;
-
-  if (token) {
-    const { data, error } = await admin.auth.getUser(token);
-    return { admin, user: error ? null : data.user };
-  }
-
-  const supabase = await createServerClient();
-  const { data, error } = await supabase.auth.getUser();
-  return { admin, user: error ? null : data.user };
-}
-
 async function resolveStorageTarget(
   admin: ReturnType<typeof createAdminClient>,
   userId: string,
@@ -162,7 +145,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const { admin, user } = await getAuthenticatedUser(request);
+    const { admin, user } = await authenticateRequest(request);
     if (!user) {
       return NextResponse.json(
         { message: "Sign in before uploading an image." },

@@ -1,9 +1,10 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useQueryClient } from "@tanstack/react-query";
 import { Check, Instagram, Music2, Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -12,7 +13,8 @@ import { CompressedImagePicker } from "@/components/media/compressed-image-picke
 import { AppShell } from "@/components/shell/app-shell";
 import { Button } from "@/components/ui/button";
 import { Chip } from "@/components/ui/chip";
-import { profiles } from "@/utils/mock-data";
+import { useCurrentProfile } from "@/hooks/use-current-profile";
+import { profileService } from "@/services/profiles";
 
 const profileSchema = z.object({
   name: z.string().min(2, "Your name is required").max(40),
@@ -27,7 +29,9 @@ type ProfileForm = z.infer<typeof profileSchema>;
 
 export default function EditProfilePage() {
   const router = useRouter();
-  const me = profiles[3];
+  const queryClient = useQueryClient();
+  const currentProfile = useCurrentProfile();
+  const me = currentProfile.data?.profile;
   const [selectedPhotos, setSelectedPhotos] = useState<File[]>([]);
   const handlePhotoChange = useCallback(
     (files: File[]) => setSelectedPhotos(files),
@@ -38,21 +42,33 @@ export default function EditProfilePage() {
     handleSubmit,
     formState: { errors, isSubmitting },
     watch,
+    reset,
   } = useForm<ProfileForm>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
-      name: "Hari",
-      bio: "Building thoughtful products, exploring new neighbourhoods, and always saving room for dessert.",
-      occupation: "Software Engineer",
-      education: "Anna University",
-      height: 178,
-      prompt:
-        "A long walk, strong filter coffee, and a conversation that forgets the time.",
+      name: "",
+      bio: "",
+      occupation: "",
+      education: "",
+      height: 170,
+      prompt: "",
     },
   });
   const bio = watch("bio");
 
-  const submit = async () => {
+  useEffect(() => {
+    if (!me) return;
+    reset({
+      name: me.name,
+      bio: me.bio,
+      occupation: me.occupation === "The Atom member" ? "" : me.occupation,
+      education: me.education === "Not added" ? "" : me.education,
+      height: me.heightCm || 170,
+      prompt: me.prompt.answer,
+    });
+  }, [me, reset]);
+
+  const submit = async (values: ProfileForm) => {
     const supabaseConfigured = Boolean(
       process.env.NEXT_PUBLIC_SUPABASE_URL &&
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
@@ -93,9 +109,18 @@ export default function EditProfilePage() {
         })),
       );
       if (photoError) throw photoError;
-    } else {
-      await new Promise((resolve) => setTimeout(resolve, 350));
     }
+
+    await profileService.updateCurrentProfile({
+      name: values.name,
+      bio: values.bio,
+      occupation: values.occupation,
+      education: values.education,
+      heightCm: values.height,
+      prompt: values.prompt,
+      interests: me?.interests,
+    });
+    await queryClient.invalidateQueries({ queryKey: ["profile"] });
 
     toast.success(
       selectedPhotos.length
@@ -127,7 +152,11 @@ export default function EditProfilePage() {
             <span className="text-xs font-bold text-success">4 of 6</span>
           </div>
           <CompressedImagePicker
-            existingImages={[me.photo, me.photo, me.photo]}
+            existingImages={
+              me?.photos.filter(
+                (photo) => !photo.endsWith("/placeholder.svg"),
+              ) ?? []
+            }
             maxImages={6}
             onChange={handlePhotoChange}
             className="mt-4"
@@ -182,13 +211,13 @@ export default function EditProfilePage() {
         <section>
           <h2 className="text-lg font-bold">Interests</h2>
           <div className="mt-3 flex flex-wrap gap-2">
-            {["Coding", "Travel", "Music", "Books", "Fitness", "Gaming"].map(
-              (item, index) => (
-                <Chip key={item} active={index < 5}>
-                  {item}
-                </Chip>
-              ),
-            )}
+            {(
+              me?.interests ?? ["Coding", "Travel", "Music", "Books", "Fitness"]
+            ).map((item) => (
+              <Chip key={item} active>
+                {item}
+              </Chip>
+            ))}
           </div>
         </section>
 

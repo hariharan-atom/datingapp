@@ -9,6 +9,7 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "smoke": "node scripts/smoke-test.mjs",
+    "test:social": "node scripts/integration-social-flow.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },

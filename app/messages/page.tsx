@@ -1,20 +1,30 @@
 "use client";
 
 import { Heart, MessageCircle, Sparkles } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 
 import { AppShell } from "@/components/shell/app-shell";
 import { Avatar } from "@/components/ui/avatar";
 import { Chip } from "@/components/ui/chip";
 import { SearchField } from "@/components/ui/search-field";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Skeleton } from "@/components/ui/skeleton";
 import { ConversationList } from "@/features/chat/components/conversation-list";
-import { conversations, profiles } from "@/utils/mock-data";
+import { chatService } from "@/services/chat";
 
 export default function MessagesPage() {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("All");
-  const filtered = conversations.filter((conversation) =>
-    conversation.profile.name.toLowerCase().includes(search.toLowerCase()),
+  const conversationsQuery = useQuery({
+    queryKey: ["conversations"],
+    queryFn: chatService.listConversations,
+  });
+  const conversations = conversationsQuery.data ?? [];
+  const filtered = conversations.filter(
+    (conversation) =>
+      conversation.profile.name.toLowerCase().includes(search.toLowerCase()) &&
+      (filter !== "Unread" || conversation.unread > 0),
   );
 
   return (
@@ -40,10 +50,13 @@ export default function MessagesPage() {
               </span>
               <span className="text-[11px] font-semibold">Likes</span>
             </button>
-            {profiles.slice(0, 3).map((profile) => (
+            {conversations.slice(0, 5).map(({ id, profile }) => (
               <button
                 type="button"
-                key={profile.id}
+                key={id}
+                onClick={() => {
+                  window.location.href = `/messages/${id}`;
+                }}
                 className="flex w-[72px] shrink-0 flex-col items-center gap-2"
               >
                 <Avatar
@@ -80,9 +93,35 @@ export default function MessagesPage() {
           })}
         </div>
       </div>
-      <div className="mt-1">
-        <ConversationList conversations={filtered} />
-      </div>
+      {conversationsQuery.isLoading ? (
+        <div className="space-y-3 px-4 py-2">
+          {[0, 1, 2].map((item) => (
+            <Skeleton key={item} className="h-20 rounded-card" />
+          ))}
+        </div>
+      ) : conversationsQuery.isError ? (
+        <EmptyState
+          icon={MessageCircle}
+          title="Messages are unavailable"
+          description="Check your connection and try again."
+          action="Try again"
+          onAction={() => void conversationsQuery.refetch()}
+        />
+      ) : filtered.length ? (
+        <div className="mt-1">
+          <ConversationList conversations={filtered} />
+        </div>
+      ) : (
+        <EmptyState
+          icon={Heart}
+          title={search ? "No conversations found" : "Your matches appear here"}
+          description={
+            search
+              ? "Try searching another name."
+              : "When you and another person like each other, you can start chatting here."
+          }
+        />
+      )}
     </AppShell>
   );
 }

@@ -21,19 +21,40 @@ import Link from "next/link";
 import { AppShell } from "@/components/shell/app-shell";
 import { Button } from "@/components/ui/button";
 import { Chip } from "@/components/ui/chip";
-import { profiles } from "@/utils/mock-data";
-
-const me = {
-  ...profiles[3],
-  name: "Hari",
-  age: 28,
-  city: "Indiranagar, Bengaluru",
-  occupation: "Software Engineer",
-  bio: "Building thoughtful products, exploring new neighbourhoods, and always saving room for dessert.",
-  interests: ["Coding", "Travel", "Music", "Books", "Fitness"],
-};
+import { EmptyState } from "@/components/ui/empty-state";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useCurrentProfile } from "@/hooks/use-current-profile";
 
 export default function ProfilePage() {
+  const currentProfile = useCurrentProfile();
+
+  if (currentProfile.isLoading) {
+    return (
+      <AppShell title="Your profile" right="logout">
+        <div className="mx-auto max-w-2xl px-4 pt-4 min-[768px]:px-6">
+          <Skeleton className="aspect-[4/4.7] rounded-[28px]" />
+          <Skeleton className="mt-5 h-24 rounded-card" />
+        </div>
+      </AppShell>
+    );
+  }
+
+  if (!currentProfile.data) {
+    return (
+      <AppShell title="Your profile" right="logout">
+        <EmptyState
+          icon={Heart}
+          title="Profile unavailable"
+          description="Refresh the page or complete onboarding to publish your profile."
+          action="Try again"
+          onAction={() => void currentProfile.refetch()}
+        />
+      </AppShell>
+    );
+  }
+
+  const { profile: me, stats } = currentProfile.data;
+
   return (
     <AppShell title="Your profile" right="logout">
       <div className="mx-auto max-w-2xl px-4 pt-4 min-[768px]:px-6">
@@ -49,12 +70,14 @@ export default function ProfilePage() {
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/5 to-black/10" />
             <div className="absolute left-4 top-4 flex gap-2">
-              <span className="flex items-center gap-1 rounded-full bg-white/85 px-2.5 py-1 text-[10px] font-bold text-success backdrop-blur">
-                <ShieldCheck className="size-3.5" />
-                Verified
-              </span>
+              {me.verified && (
+                <span className="flex items-center gap-1 rounded-full bg-white/85 px-2.5 py-1 text-[10px] font-bold text-success backdrop-blur">
+                  <ShieldCheck className="size-3.5" />
+                  Verified
+                </span>
+              )}
               <span className="rounded-full bg-black/20 px-2.5 py-1 text-[10px] font-bold text-white backdrop-blur">
-                82% complete
+                {me.compatibility}% complete
               </span>
             </div>
             <Link
@@ -79,14 +102,19 @@ export default function ProfilePage() {
           {[
             {
               label: "Profile views",
-              value: "148",
+              value: String(stats.views),
               icon: Eye,
               color: "text-secondary",
             },
-            { label: "Likes", value: "36", icon: Heart, color: "text-primary" },
+            {
+              label: "Likes",
+              value: String(stats.likes),
+              icon: Heart,
+              color: "text-primary",
+            },
             {
               label: "Bookmarks",
-              value: "12",
+              value: String(stats.bookmarks),
               icon: Bookmark,
               color: "text-warning",
             },
@@ -120,8 +148,8 @@ export default function ProfilePage() {
                 Strong, with room to shine.
               </h2>
               <p className="mt-2 text-xs leading-5 text-white/65">
-                A candid social photo and one specific prompt could lift your
-                profile score.
+                Your profile is published. Keep your details and photos current
+                so people can get to know the real you.
               </p>
               <Link
                 href="/ai"
@@ -159,7 +187,7 @@ export default function ProfilePage() {
               {
                 icon: Languages,
                 label: "Languages",
-                value: me.languages.join(", "),
+                value: me.languages.join(", ") || "Not added",
               },
               {
                 icon: Star,
