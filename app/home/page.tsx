@@ -19,7 +19,7 @@ import { communities, events, profiles } from "@/utils/mock-data";
 
 export default function HomePage() {
   return (
-    <AppShell title="Good evening" right="messages">
+    <AppShell title="The Atom" right="notifications">
       <div className="space-y-8 px-4 pt-4 min-[768px]:px-6">
         <section>
           <div className="mb-5 flex items-start justify-between gap-4">

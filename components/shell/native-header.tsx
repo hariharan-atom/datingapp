@@ -4,6 +4,8 @@ import { motion, useMotionValueEvent, useScroll } from "framer-motion";
 import {
   Bell,
   ChevronLeft,
+  LoaderCircle,
+  LogOut,
   MessageCircle,
   Search,
   ShieldCheck,
@@ -11,14 +13,22 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { toast } from "sonner";
 
 import { Avatar } from "@/components/ui/avatar";
+import { authService } from "@/services/auth";
 
 interface NativeHeaderProps {
   title: string;
   back?: boolean;
   right?:
-    "notifications" | "messages" | "search" | "filters" | "profile" | "safety";
+    | "notifications"
+    | "messages"
+    | "search"
+    | "filters"
+    | "profile"
+    | "safety"
+    | "logout";
   onRightClick?: () => void;
   subtitle?: string;
 }
@@ -33,6 +43,7 @@ export function NativeHeader({
   const router = useRouter();
   const { scrollY } = useScroll();
   const [compact, setCompact] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
 
   useMotionValueEvent(scrollY, "change", (value) => setCompact(value > 12));
 
@@ -43,8 +54,42 @@ export function NativeHeader({
     filters: SlidersHorizontal,
     safety: ShieldCheck,
     profile: Bell,
+    logout: LogOut,
   }[right];
   const RightIcon = icon;
+
+  const handleRightClick = async () => {
+    if (onRightClick) {
+      onRightClick();
+      return;
+    }
+
+    if (right === "logout") {
+      setSigningOut(true);
+      try {
+        await authService.signOut();
+        router.replace("/login");
+        router.refresh();
+      } catch (error) {
+        toast.error("Couldn’t log out", {
+          description:
+            error instanceof Error ? error.message : "Please try again.",
+        });
+        setSigningOut(false);
+      }
+      return;
+    }
+
+    router.push(
+      right === "notifications"
+        ? "/notifications"
+        : right === "messages"
+          ? "/messages"
+          : right === "search"
+            ? "/search"
+            : "/settings/safety",
+    );
+  };
 
   return (
     <motion.header
@@ -85,7 +130,7 @@ export function NativeHeader({
           {right === "profile" ? (
             <button
               type="button"
-              onClick={onRightClick}
+              onClick={onRightClick ?? (() => router.push("/profile"))}
               aria-label="Open profile"
             >
               <Avatar
@@ -97,23 +142,16 @@ export function NativeHeader({
           ) : (
             <button
               type="button"
-              onClick={
-                onRightClick ??
-                (() =>
-                  router.push(
-                    right === "notifications"
-                      ? "/notifications"
-                      : right === "messages"
-                        ? "/messages"
-                        : right === "search"
-                          ? "/search"
-                          : "/settings/safety",
-                  ))
-              }
+              onClick={() => void handleRightClick()}
+              disabled={signingOut}
               aria-label={right}
               className="relative grid size-10 place-items-center rounded-2xl bg-surface"
             >
-              <RightIcon className="size-[19px]" />
+              {signingOut ? (
+                <LoaderCircle className="size-[19px] animate-spin" />
+              ) : (
+                <RightIcon className="size-[19px]" />
+              )}
               {right === "notifications" && (
                 <span className="absolute right-2 top-2 size-2 rounded-full border border-white bg-primary" />
               )}

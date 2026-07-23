@@ -2,7 +2,6 @@
 
 import {
   BadgeCheck,
-  Bell,
   Bookmark,
   ChevronRight,
   Edit3,
@@ -36,7 +35,7 @@ const me = {
 
 export default function ProfilePage() {
   return (
-    <AppShell title="Your profile" right="notifications">
+    <AppShell title="Your profile" right="logout">
       <div className="mx-auto max-w-2xl px-4 pt-4 min-[768px]:px-6">
         <section className="relative overflow-hidden rounded-[28px] bg-ink shadow-float">
           <div className="relative aspect-[4/4.7]">
@@ -192,7 +191,6 @@ export default function ProfilePage() {
               label: "Safety centre",
               href: "/settings/safety",
             },
-            { icon: Bell, label: "Notifications", href: "/notifications" },
             { icon: Gift, label: "Gifts & history", href: "/gifts" },
           ].map((item) => {
             const Icon = item.icon;

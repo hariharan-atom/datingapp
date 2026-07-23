@@ -8,7 +8,13 @@ interface AppShellProps {
   children: React.ReactNode;
   back?: boolean;
   right?:
-    "notifications" | "messages" | "search" | "filters" | "profile" | "safety";
+    | "notifications"
+    | "messages"
+    | "search"
+    | "filters"
+    | "profile"
+    | "safety"
+    | "logout";
   onRightClick?: () => void;
   subtitle?: string;
   hideNav?: boolean;

@@ -1,27 +1,33 @@
 import { createClient } from "@/supabase/client";
 
+export type AuthMode = "create" | "login";
+
 export const authService = {
-  async sendOtp(phone: string) {
+  async sendEmailOtp(email: string, mode: AuthMode, next = "/onboarding") {
     const supabase = createClient();
     const { error } = await supabase.auth.signInWithOtp({
-      phone: `+91${phone}`,
+      email,
+      options: {
+        shouldCreateUser: mode === "create",
+        emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
+      },
     });
     if (error) throw error;
   },
 
-  async verifyOtp(phone: string, token: string) {
+  async verifyEmailOtp(email: string, token: string) {
     const supabase = createClient();
     const { data, error } = await supabase.auth.verifyOtp({
-      phone: `+91${phone}`,
+      email,
       token,
-      type: "sms",
+      type: "email",
     });
     if (error) throw error;
     return data;
   },
 
   async signOut() {
-    const { error } = await createClient().auth.signOut();
+    const { error } = await createClient().auth.signOut({ scope: "global" });
     if (error) throw error;
   },
 };

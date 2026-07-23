@@ -15,6 +15,25 @@ interface CatalogRow {
   stock: number;
 }
 
+export interface AdminShopProduct extends CatalogRow {
+  sort_order: number;
+  is_active: boolean;
+}
+
+export interface AdminShopOrder {
+  id: string;
+  user_id: string;
+  status:
+    | "pending"
+    | "confirmed"
+    | "preparing"
+    | "shipped"
+    | "delivered"
+    | "cancelled";
+  delivery_note: string | null;
+  created_at: string;
+}
+
 export interface CartLine {
   productId: string;
   quantity: number;
@@ -70,5 +89,38 @@ export const catalogService = {
 
     if (error) throw error;
     return { id: data as string, status: "confirmed" as const };
+  },
+};
+
+export const catalogAdminService = {
+  async createProduct(product: AdminShopProduct) {
+    const { error } = await createClient()
+      .from("shop_products")
+      .insert(product);
+    if (error) throw error;
+  },
+
+  async updateProduct(
+    id: string,
+    updates: Partial<
+      Pick<
+        AdminShopProduct,
+        "stock" | "is_active" | "price_paise" | "sort_order"
+      >
+    >,
+  ) {
+    const { error } = await createClient()
+      .from("shop_products")
+      .update({ ...updates, updated_at: new Date().toISOString() })
+      .eq("id", id);
+    if (error) throw error;
+  },
+
+  async updateOrderStatus(id: string, status: AdminShopOrder["status"]) {
+    const { error } = await createClient()
+      .from("shop_orders")
+      .update({ status, updated_at: new Date().toISOString() })
+      .eq("id", id);
+    if (error) throw error;
   },
 };

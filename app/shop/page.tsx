@@ -5,16 +5,17 @@ import { motion } from "framer-motion";
 import {
   Check,
   ChevronRight,
-  Heart,
   Minus,
   PackageCheck,
   Plus,
   ShoppingBag,
   Sparkles,
   Star,
+  Settings2,
   Truck,
 } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
@@ -190,18 +191,21 @@ export default function ShopPage() {
           ))}
         </section>
 
-        <section className="flex items-center gap-4 rounded-card border border-primary/10 bg-primary-soft p-4">
+        <Link
+          href="/admin/shop"
+          className="flex items-center gap-4 rounded-card border border-primary/10 bg-primary-soft p-4"
+        >
           <span className="grid size-11 shrink-0 place-items-center rounded-[16px] bg-white text-primary shadow-soft">
-            <Heart className="size-5" />
+            <Settings2 className="size-5" />
           </span>
-          <div className="min-w-0">
-            <p className="text-sm font-bold">Products managed by admins</p>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-bold">Open shop admin</p>
             <p className="mt-1 text-xs leading-5 text-muted">
-              Availability, pricing, and catalog updates sync from the secure
-              admin-managed product database.
+              Manage products, stock, and customer order status.
             </p>
           </div>
-        </section>
+          <ChevronRight className="size-5 text-primary" />
+        </Link>
       </div>
 
       {cartCount > 0 && (

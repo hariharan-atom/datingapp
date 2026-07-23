@@ -1,12 +1,29 @@
 import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
 
+const PUBLIC_AUTH_ROUTES = ["/login", "/otp", "/auth/callback"];
+
+function copyCookies(source: NextResponse, target: NextResponse) {
+  source.cookies.getAll().forEach((cookie) => {
+    target.cookies.set(cookie);
+  });
+  return target;
+}
+
 export async function updateSession(request: NextRequest) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const { pathname, search } = request.nextUrl;
 
   if (!url || !anonKey) {
-    return NextResponse.next({ request });
+    if (PUBLIC_AUTH_ROUTES.some((route) => pathname.startsWith(route))) {
+      return NextResponse.next({ request });
+    }
+    const loginUrl = request.nextUrl.clone();
+    loginUrl.pathname = "/login";
+    loginUrl.search = "";
+    loginUrl.searchParams.set("error", "configuration");
+    return NextResponse.redirect(loginUrl);
   }
 
   let response = NextResponse.next({ request });
@@ -25,6 +42,58 @@ export async function updateSession(request: NextRequest) {
     },
   });
 
-  await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const isPublicAuthRoute = PUBLIC_AUTH_ROUTES.some((route) =>
+    pathname.startsWith(route),
+  );
+  const isHealthRoute = pathname.startsWith("/api/health");
+
+  if (isHealthRoute || pathname.startsWith("/auth/callback")) {
+    return response;
+  }
+
+  if (!user) {
+    if (isPublicAuthRoute) return response;
+
+    const loginUrl = request.nextUrl.clone();
+    loginUrl.pathname = "/login";
+    loginUrl.search = "";
+    if (pathname !== "/") {
+      loginUrl.searchParams.set("next", `${pathname}${search}`);
+    }
+    return copyCookies(response, NextResponse.redirect(loginUrl));
+  }
+
+  const { data: appUser } = await supabase
+    .from("users")
+    .select("onboarding_complete")
+    .eq("id", user.id)
+    .maybeSingle();
+  const onboardingComplete = appUser?.onboarding_complete === true;
+
+  if (pathname === "/" || isPublicAuthRoute) {
+    const destination = request.nextUrl.clone();
+    destination.pathname = onboardingComplete ? "/home" : "/onboarding";
+    destination.search = "";
+    return copyCookies(response, NextResponse.redirect(destination));
+  }
+
+  if (!onboardingComplete && pathname !== "/onboarding") {
+    const onboardingUrl = request.nextUrl.clone();
+    onboardingUrl.pathname = "/onboarding";
+    onboardingUrl.search = "";
+    return copyCookies(response, NextResponse.redirect(onboardingUrl));
+  }
+
+  if (onboardingComplete && pathname === "/onboarding") {
+    const homeUrl = request.nextUrl.clone();
+    homeUrl.pathname = "/home";
+    homeUrl.search = "";
+    return copyCookies(response, NextResponse.redirect(homeUrl));
+  }
+
   return response;
 }

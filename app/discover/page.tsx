@@ -26,7 +26,7 @@ export default function DiscoverPage() {
   const next = () => setIndex((value) => value + 1);
 
   return (
-    <AppShell title="Discover" right="search">
+    <AppShell title="Discover" right="messages">
       <div className="px-4 pt-3 min-[768px]:px-6">
         <div className="flex items-center justify-between gap-3">
           <div className="flex gap-2">

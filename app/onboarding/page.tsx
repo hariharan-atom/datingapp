@@ -11,7 +11,6 @@ import {
   Heart,
   Languages,
   LocateFixed,
-  MessageCircleHeart,
   ShieldCheck,
   Sparkles,
 } from "lucide-react";
@@ -19,20 +18,24 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { z } from "zod";
 
+import { CompressedImagePicker } from "@/components/media/compressed-image-picker";
 import { Button } from "@/components/ui/button";
 import { Chip } from "@/components/ui/chip";
-import { CompressedImagePicker } from "@/components/media/compressed-image-picker";
+import { onboardingService, type OnboardingGoal } from "@/services/onboarding";
 
 const onboardingSchema = z.object({
-  phone: z
-    .string()
-    .regex(/^[6-9]\d{9}$/, "Enter a valid 10-digit Indian mobile number"),
-  otp: z.string().length(6, "Enter the 6-digit code"),
-  name: z.string().min(2, "Tell us your first name").max(40),
-  birthday: z.string().min(1, "Your birthday is required"),
-  bio: z.string().min(20, "Write at least 20 characters").max(300),
+  name: z.string().trim().min(2, "Tell us your first name").max(40),
+  birthday: z.string().refine((value) => {
+    const birthday = new Date(value);
+    const cutoff = new Date();
+    cutoff.setFullYear(cutoff.getFullYear() - 18);
+    return !Number.isNaN(birthday.getTime()) && birthday <= cutoff;
+  }, "You must be at least 18 years old"),
+  gender: z.enum(["woman", "man", "non_binary", "self_described"]),
+  bio: z.string().trim().min(20, "Write at least 20 characters").max(300),
 });
 
 type OnboardingForm = z.infer<typeof onboardingSchema>;
@@ -40,14 +43,21 @@ type OnboardingForm = z.infer<typeof onboardingSchema>;
 const steps = [
   "Welcome",
   "Language",
-  "Login",
-  "Verify",
   "Profile",
   "Photos",
   "Bio",
   "Interests",
   "Preferences",
   "Safety",
+];
+
+const languages = [
+  { label: "English", locale: "en-IN" },
+  { label: "हिन्दी", locale: "hi-IN" },
+  { label: "தமிழ்", locale: "ta-IN" },
+  { label: "తెలుగు", locale: "te-IN" },
+  { label: "ಕನ್ನಡ", locale: "kn-IN" },
+  { label: "മലയാളം", locale: "ml-IN" },
 ];
 
 const interests = [
@@ -65,46 +75,83 @@ const interests = [
   "Art",
 ];
 
+const goals: { label: string; value: OnboardingGoal }[] = [
+  { label: "Long-term relationship", value: "long_term" },
+  { label: "Life partner", value: "life_partner" },
+  { label: "Dating", value: "dating" },
+  { label: "Open to exploring", value: "exploring" },
+];
+
 export default function OnboardingPage() {
   const router = useRouter();
   const [step, setStep] = useState(0);
-  const [language, setLanguage] = useState("English");
+  const [locale, setLocale] = useState("en-IN");
   const [selectedInterests, setSelectedInterests] = useState<string[]>([
     "Travel",
     "Music",
     "Books",
   ]);
-  const [goal, setGoal] = useState("Long-term relationship");
+  const [goal, setGoal] = useState<OnboardingGoal>("long_term");
+  const [photoFiles, setPhotoFiles] = useState<File[]>([]);
+  const [submitting, setSubmitting] = useState(false);
   const {
     register,
     trigger,
+    getValues,
     formState: { errors },
     watch,
   } = useForm<OnboardingForm>({
     resolver: zodResolver(onboardingSchema),
     defaultValues: {
-      phone: "",
-      otp: "",
       name: "",
       birthday: "",
+      gender: "man",
       bio: "",
     },
   });
   const bio = watch("bio");
 
   const next = async () => {
-    const fieldByStep: Partial<Record<number, keyof OnboardingForm>> = {
-      2: "phone",
-      3: "otp",
-      4: "name",
-      6: "bio",
-    };
-    const field = fieldByStep[step];
-    if (field && !(await trigger(field))) return;
-    if (step === steps.length - 1) {
-      router.push("/home");
+    if (step === 2 && !(await trigger(["name", "birthday", "gender"]))) {
       return;
     }
+    if (step === 3 && photoFiles.length === 0) {
+      toast.error("Add at least one clear profile photo");
+      return;
+    }
+    if (step === 4 && !(await trigger("bio"))) return;
+    if (step === 5 && selectedInterests.length < 5) {
+      toast.error("Choose at least five interests");
+      return;
+    }
+
+    if (step === steps.length - 1) {
+      const values = getValues();
+      setSubmitting(true);
+      try {
+        await onboardingService.complete({
+          locale,
+          name: values.name,
+          birthday: values.birthday,
+          gender: values.gender,
+          bio: values.bio,
+          interests: selectedInterests,
+          relationshipGoal: goal,
+          photos: photoFiles,
+        });
+        router.replace("/home");
+        router.refresh();
+      } catch (error) {
+        toast.error("Couldn’t finish your profile", {
+          description:
+            error instanceof Error ? error.message : "Please try again.",
+        });
+      } finally {
+        setSubmitting(false);
+      }
+      return;
+    }
+
     setStep((value) => value + 1);
   };
 
@@ -116,6 +163,7 @@ export default function OnboardingPage() {
             type="button"
             onClick={() => setStep((value) => value - 1)}
             className="grid size-10 place-items-center rounded-2xl bg-surface"
+            aria-label="Previous step"
           >
             <ArrowLeft className="size-5" />
           </button>
@@ -156,26 +204,19 @@ export default function OnboardingPage() {
                 description="You can change this later in settings."
               >
                 <div className="space-y-2">
-                  {[
-                    "English",
-                    "हिन्दी",
-                    "தமிழ்",
-                    "తెలుగు",
-                    "ಕನ್ನಡ",
-                    "മലയാളം",
-                  ].map((item) => (
+                  {languages.map((item) => (
                     <button
                       type="button"
-                      key={item}
-                      onClick={() => setLanguage(item)}
+                      key={item.locale}
+                      onClick={() => setLocale(item.locale)}
                       className={`flex h-14 w-full items-center rounded-input border px-4 text-left text-sm font-semibold ${
-                        language === item
+                        locale === item.locale
                           ? "border-primary bg-primary-soft text-primary"
                           : "border-border"
                       }`}
                     >
-                      {item}
-                      {language === item && (
+                      {item.label}
+                      {locale === item.locale && (
                         <Check className="ml-auto size-5" />
                       )}
                     </button>
@@ -185,127 +226,62 @@ export default function OnboardingPage() {
             )}
             {step === 2 && (
               <OnboardingSection
-                icon={MessageCircleHeart}
-                eyebrow="Welcome to The Atom"
-                title="What’s your mobile number?"
-                description="We’ll send a one-time code. No passwords to remember."
-              >
-                <label className="flex h-14 items-center rounded-input border border-border bg-surface px-4 focus-within:border-secondary/30">
-                  <span className="border-r border-border pr-3 text-sm font-bold">
-                    +91
-                  </span>
-                  <input
-                    {...register("phone")}
-                    inputMode="numeric"
-                    autoComplete="tel-national"
-                    maxLength={10}
-                    placeholder="98765 43210"
-                    className="min-w-0 flex-1 bg-transparent pl-3 text-base outline-none"
-                  />
-                </label>
-                {errors.phone && (
-                  <p className="mt-2 text-xs text-danger">
-                    {errors.phone.message}
-                  </p>
-                )}
-                <p className="mt-4 text-[11px] leading-5 text-muted">
-                  By continuing, you confirm you’re 18+ and agree to our Terms
-                  and Privacy Policy.
-                </p>
-              </OnboardingSection>
-            )}
-            {step === 3 && (
-              <OnboardingSection
-                icon={ShieldCheck}
-                eyebrow="Check your messages"
-                title="Enter your verification code"
-                description="We sent a six-digit code to your mobile number."
-              >
-                <input
-                  {...register("otp")}
-                  inputMode="numeric"
-                  autoComplete="one-time-code"
-                  maxLength={6}
-                  placeholder="• • • • • •"
-                  className="h-16 w-full rounded-input border border-border bg-surface px-4 text-center text-2xl font-bold tracking-[0.45em] outline-none focus:border-secondary/30"
-                />
-                {errors.otp && (
-                  <p className="mt-2 text-xs text-danger">
-                    {errors.otp.message}
-                  </p>
-                )}
-                <button
-                  type="button"
-                  className="mt-4 text-sm font-bold text-primary"
-                >
-                  Resend code in 00:28
-                </button>
-              </OnboardingSection>
-            )}
-            {step === 4 && (
-              <OnboardingSection
                 icon={Heart}
                 eyebrow="The real you"
                 title="Tell us the basics"
                 description="Your first name and age will be visible on your profile."
               >
                 <div className="space-y-4">
-                  <label>
-                    <span className="mb-2 block text-xs font-bold">
-                      First name
-                    </span>
+                  <Field label="First name" error={errors.name?.message}>
                     <input
                       {...register("name")}
+                      autoComplete="given-name"
                       placeholder="What should people call you?"
-                      className="h-14 w-full rounded-input border border-border bg-surface px-4 text-sm outline-none focus:border-secondary/30"
+                      className="h-14 w-full rounded-input border border-border bg-surface px-4 text-sm outline-none focus:border-primary/40"
                     />
-                    {errors.name && (
-                      <span className="mt-1 block text-xs text-danger">
-                        {errors.name.message}
-                      </span>
-                    )}
-                  </label>
-                  <label>
-                    <span className="mb-2 block text-xs font-bold">
-                      Birthday
-                    </span>
+                  </Field>
+                  <Field label="Birthday" error={errors.birthday?.message}>
                     <input
                       {...register("birthday")}
                       type="date"
-                      className="h-14 w-full rounded-input border border-border bg-surface px-4 text-sm outline-none focus:border-secondary/30"
+                      className="h-14 w-full rounded-input border border-border bg-surface px-4 text-sm outline-none focus:border-primary/40"
                     />
-                  </label>
-                  <button
-                    type="button"
-                    className="flex h-14 w-full items-center rounded-input border border-border bg-surface px-4 text-sm"
-                  >
-                    Gender identity
-                    <ChevronDown className="ml-auto size-4 text-muted" />
-                  </button>
+                  </Field>
+                  <Field label="Gender identity" error={errors.gender?.message}>
+                    <span className="relative block">
+                      <select
+                        {...register("gender")}
+                        className="h-14 w-full appearance-none rounded-input border border-border bg-surface px-4 text-sm outline-none focus:border-primary/40"
+                      >
+                        <option value="woman">Woman</option>
+                        <option value="man">Man</option>
+                        <option value="non_binary">Non-binary</option>
+                        <option value="self_described">Self-described</option>
+                      </select>
+                      <ChevronDown className="pointer-events-none absolute right-4 top-5 size-4 text-muted" />
+                    </span>
+                  </Field>
                 </div>
               </OnboardingSection>
             )}
-            {step === 5 && (
+            {step === 3 && (
               <OnboardingSection
                 icon={Camera}
                 eyebrow="Show your energy"
                 title="Add your best photos"
-                description="Choose recent, clear photos where you look like yourself."
+                description="Every selected image is compressed to 150 KB or less before upload."
               >
-                <CompressedImagePicker
-                  existingImages={["/images/profiles/kabir.webp"]}
-                  maxImages={6}
-                />
+                <CompressedImagePicker maxImages={6} onChange={setPhotoFiles} />
                 <div className="mt-4 flex gap-3 rounded-card bg-primary-soft p-4">
                   <Sparkles className="size-5 shrink-0 text-primary" />
                   <p className="text-xs leading-5 text-muted">
-                    Add at least three photos: a clear face, a full-length
-                    photo, and something you genuinely enjoy.
+                    Start with a clear recent photo. Add more photos later from
+                    your profile.
                   </p>
                 </div>
               </OnboardingSection>
             )}
-            {step === 6 && (
+            {step === 4 && (
               <OnboardingSection
                 icon={Sparkles}
                 eyebrow="In your own words"
@@ -317,7 +293,7 @@ export default function OnboardingPage() {
                     {...register("bio")}
                     rows={6}
                     placeholder="A little about you, your everyday life, and what makes you smile…"
-                    className="w-full resize-none rounded-input border border-border bg-surface p-4 text-sm leading-6 outline-none focus:border-secondary/30"
+                    className="w-full resize-none rounded-input border border-border bg-surface p-4 text-sm leading-6 outline-none focus:border-primary/40"
                   />
                   <span className="absolute bottom-3 right-3 text-[10px] text-muted">
                     {bio?.length ?? 0}/300
@@ -328,23 +304,9 @@ export default function OnboardingPage() {
                     {errors.bio.message}
                   </p>
                 )}
-                <button
-                  type="button"
-                  className="mt-4 flex w-full items-center gap-3 rounded-card bg-gradient-to-r from-secondary/10 to-primary/10 p-4 text-left"
-                >
-                  <Sparkles className="size-5 text-secondary" />
-                  <span>
-                    <span className="block text-xs font-bold">
-                      Help me write it
-                    </span>
-                    <span className="mt-1 block text-[11px] text-muted">
-                      AI asks questions, then drafts in your voice
-                    </span>
-                  </span>
-                </button>
               </OnboardingSection>
             )}
-            {step === 7 && (
+            {step === 5 && (
               <OnboardingSection
                 icon={Sparkles}
                 eyebrow="What lights you up?"
@@ -373,7 +335,7 @@ export default function OnboardingPage() {
                 </p>
               </OnboardingSection>
             )}
-            {step === 8 && (
+            {step === 6 && (
               <OnboardingSection
                 icon={LocateFixed}
                 eyebrow="Your kind of connection"
@@ -382,73 +344,46 @@ export default function OnboardingPage() {
               >
                 <p className="mb-3 text-xs font-bold">Relationship goal</p>
                 <div className="space-y-2">
-                  {[
-                    "Long-term relationship",
-                    "Life partner",
-                    "Dating",
-                    "Open to exploring",
-                  ].map((item) => (
+                  {goals.map((item) => (
                     <button
                       type="button"
-                      key={item}
-                      onClick={() => setGoal(item)}
+                      key={item.value}
+                      onClick={() => setGoal(item.value)}
                       className={`flex h-[52px] w-full items-center rounded-input border px-4 text-left text-sm font-semibold ${
-                        goal === item
+                        goal === item.value
                           ? "border-primary bg-primary-soft text-primary"
                           : "border-border"
                       }`}
                     >
-                      {item}
-                      {goal === item && <Check className="ml-auto size-4" />}
+                      {item.label}
+                      {goal === item.value && (
+                        <Check className="ml-auto size-4" />
+                      )}
                     </button>
                   ))}
                 </div>
                 <div className="mt-5 grid grid-cols-2 gap-3">
-                  <button
-                    type="button"
-                    className="rounded-[20px] bg-surface p-4 text-left"
-                  >
-                    <span className="text-[10px] text-muted">Age range</span>
-                    <span className="mt-1 block text-sm font-bold">
-                      24 – 34
-                    </span>
-                  </button>
-                  <button
-                    type="button"
-                    className="rounded-[20px] bg-surface p-4 text-left"
-                  >
-                    <span className="text-[10px] text-muted">Distance</span>
-                    <span className="mt-1 block text-sm font-bold">
-                      Within 25 km
-                    </span>
-                  </button>
+                  <Preference label="Age range" value="24 – 34" />
+                  <Preference label="Distance" value="Within 25 km" />
                 </div>
               </OnboardingSection>
             )}
-            {step === 9 && (
+            {step === 7 && (
               <OnboardingSection
                 icon={ShieldCheck}
                 eyebrow="Safety by design"
-                title="Verify the real you"
-                description="A quick liveness check helps keep The Atom genuine. Your verification media is not public."
+                title="A safer place to connect"
+                description="Verification, reporting, blocking, and privacy controls are always available."
               >
-                <div className="relative mx-auto grid aspect-square max-w-[260px] place-items-center overflow-hidden rounded-full bg-gradient-to-br from-primary-soft to-secondary/10">
+                <div className="relative mx-auto grid aspect-square max-w-[250px] place-items-center overflow-hidden rounded-full bg-gradient-to-br from-primary-soft to-secondary/10">
                   <div className="absolute inset-4 rounded-full border-2 border-dashed border-secondary/25" />
-                  <div className="text-center">
-                    <ShieldCheck className="mx-auto size-12 text-secondary" />
-                    <p className="mt-3 text-sm font-bold">
-                      Private liveness check
-                    </p>
-                    <p className="mx-auto mt-1 max-w-[180px] text-[11px] leading-5 text-muted">
-                      Follow a simple on-screen movement
-                    </p>
-                  </div>
+                  <ShieldCheck className="size-14 text-primary" />
                 </div>
                 <div className="mt-6 space-y-3">
                   {[
-                    "Helps prevent fake profiles",
-                    "Adds a visible verification badge",
-                    "Sensitive media is securely processed",
+                    "Images are compressed before secure upload",
+                    "Block and report controls stay one tap away",
+                    "You control profile visibility and location precision",
                   ].map((item) => (
                     <p
                       key={item}
@@ -467,19 +402,15 @@ export default function OnboardingPage() {
         </AnimatePresence>
 
         <div className="mt-6">
-          <Button fullWidth size="lg" onClick={() => void next()}>
+          <Button
+            fullWidth
+            size="lg"
+            loading={submitting}
+            onClick={() => void next()}
+          >
             {step === steps.length - 1 ? "Start discovering" : "Continue"}
             <ArrowRight className="size-5" />
           </Button>
-          {step === 9 && (
-            <button
-              type="button"
-              onClick={() => router.push("/home")}
-              className="mt-4 w-full text-center text-xs font-semibold text-muted"
-            >
-              Do this later
-            </button>
-          )}
         </div>
       </main>
     </div>
@@ -488,58 +419,75 @@ export default function OnboardingPage() {
 
 function WelcomeStep() {
   return (
-    <div className="flex flex-1 flex-col justify-center pb-10">
-      <div className="relative mx-auto w-full max-w-sm">
-        <div className="absolute -left-2 top-12 size-24 rounded-full bg-primary/15 blur-2xl" />
-        <div className="absolute -right-2 top-24 size-24 rounded-full bg-secondary/15 blur-2xl" />
-        <div className="relative mx-auto flex h-64 items-end justify-center">
-          <motion.div
-            initial={{ x: -20, rotate: -12, opacity: 0 }}
-            animate={{ x: 0, rotate: -8, opacity: 1 }}
-            transition={{ type: "spring", delay: 0.15 }}
-            className="relative z-10 h-56 w-40 overflow-hidden rounded-[32px] border-4 border-white shadow-float"
-          >
-            <Image
-              src="/images/profiles/ananya.webp"
-              alt="A fictional The Atom member"
-              fill
-              priority
-              className="object-cover"
-            />
-          </motion.div>
-          <motion.div
-            initial={{ x: 20, rotate: 12, opacity: 0 }}
-            animate={{ x: 0, rotate: 8, opacity: 1 }}
-            transition={{ type: "spring", delay: 0.28 }}
-            className="relative -ml-8 h-56 w-40 overflow-hidden rounded-[32px] border-4 border-white shadow-float"
-          >
-            <Image
-              src="/images/profiles/arjun.webp"
-              alt="A fictional The Atom member"
-              fill
-              priority
-              className="object-cover"
-            />
-          </motion.div>
-          <motion.span
-            animate={{ y: [0, -6, 0], rotate: [-4, 4, -4] }}
-            transition={{ repeat: Infinity, duration: 3.2 }}
-            className="absolute bottom-4 z-20 grid size-14 place-items-center rounded-full bg-gradient-to-br from-primary to-secondary text-white shadow-glow"
-          >
-            <Heart className="size-6" fill="currentColor" />
-          </motion.span>
-        </div>
+    <div className="flex flex-1 flex-col justify-center pb-8">
+      <div className="relative mx-auto flex h-60 w-full max-w-sm items-end justify-center">
+        <div className="absolute left-10 top-10 size-24 rounded-full bg-primary/15 blur-2xl" />
+        <motion.div
+          initial={{ x: -18, rotate: -12, opacity: 0 }}
+          animate={{ x: 0, rotate: -8, opacity: 1 }}
+          className="relative z-10 h-52 w-36 overflow-hidden rounded-[30px] border-4 border-white shadow-float"
+        >
+          <Image
+            src="/images/profiles/ananya.webp"
+            alt="A fictional The Atom member"
+            fill
+            priority
+            className="object-cover"
+          />
+        </motion.div>
+        <motion.div
+          initial={{ x: 18, rotate: 12, opacity: 0 }}
+          animate={{ x: 0, rotate: 8, opacity: 1 }}
+          className="relative -ml-7 h-52 w-36 overflow-hidden rounded-[30px] border-4 border-white shadow-float"
+        >
+          <Image
+            src="/images/profiles/arjun.webp"
+            alt="A fictional The Atom member"
+            fill
+            priority
+            className="object-cover"
+          />
+        </motion.div>
+        <span className="absolute bottom-3 z-20 grid size-14 place-items-center rounded-full bg-gradient-to-br from-primary to-secondary text-white shadow-glow">
+          <Heart className="size-6" fill="currentColor" />
+        </span>
       </div>
       <p className="mt-8 text-center text-sm font-bold uppercase tracking-[0.22em] text-primary">
-        Meet with intention
+        Welcome to The Atom
       </p>
       <h1 className="mt-3 text-balance text-center text-[38px] font-bold leading-[1.05] tracking-[-0.055em]">
-        A better way to find your person.
+        Build a profile that feels like you.
       </h1>
       <p className="mx-auto mt-4 max-w-sm text-center text-sm leading-6 text-muted">
-        Thoughtful matches, honest profiles, and safer conversations—built for
-        modern India.
+        A few thoughtful details help us introduce you to compatible people.
       </p>
+    </div>
+  );
+}
+
+function Field({
+  label,
+  error,
+  children,
+}: {
+  label: string;
+  error?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <label>
+      <span className="mb-2 block text-xs font-bold">{label}</span>
+      {children}
+      {error && <span className="mt-1 block text-xs text-danger">{error}</span>}
+    </label>
+  );
+}
+
+function Preference({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-[20px] bg-surface p-4">
+      <span className="text-[10px] text-muted">{label}</span>
+      <span className="mt-1 block text-sm font-bold">{value}</span>
     </div>
   );
 }
