@@ -28,6 +28,7 @@ export default function DiscoverPage() {
   const [match, setMatch] = useState<{
     profile: Profile;
     chatId: string | null;
+    pending: boolean;
   } | null>(null);
   const swipeX = useMotionValue(0);
   const nextCardScale = useTransform(swipeX, [-320, 0, 320], [1, 0.955, 1]);
@@ -126,12 +127,33 @@ export default function DiscoverPage() {
                   profile={current}
                   swipeable
                   dragX={swipeX}
-                  onPass={next}
-                  onLike={(result) => {
-                    if (result.matched) {
-                      setMatch({ profile: current, chatId: result.chatId });
+                  onSwipeComplete={(action) => {
+                    if (action !== "pass") {
+                      setMatch({
+                        profile: current,
+                        chatId: null,
+                        pending: true,
+                      });
                     }
                     next();
+                  }}
+                  onActionError={(action) => {
+                    if (action !== "pass") {
+                      setMatch((existing) =>
+                        existing?.profile.id === current.id ? null : existing,
+                      );
+                    }
+                  }}
+                  onLike={(result) => {
+                    setMatch((existing) => {
+                      if (existing?.profile.id !== current.id) return existing;
+                      if (!result.matched) return null;
+                      return {
+                        ...existing,
+                        chatId: result.chatId,
+                        pending: false,
+                      };
+                    });
                   }}
                 />
               </div>
@@ -152,6 +174,7 @@ export default function DiscoverPage() {
       <MatchOverlay
         profile={match?.profile ?? null}
         chatId={match?.chatId ?? null}
+        chatPending={match?.pending ?? false}
         onClose={() => setMatch(null)}
       />
     </AppShell>

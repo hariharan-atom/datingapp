@@ -27,11 +27,15 @@ import { profileService, type ProfileActionResult } from "@/services/profiles";
 import type { Profile } from "@/types/domain";
 import { cn } from "@/utils/cn";
 
+export type SwipeAction = "like" | "super_like" | "pass";
+
 interface ProfileCardProps {
   profile: Profile;
   compact?: boolean;
   swipeable?: boolean;
   dragX?: MotionValue<number>;
+  onSwipeComplete?: (action: SwipeAction) => void;
+  onActionError?: (action: SwipeAction) => void;
   onPass?: (result: ProfileActionResult) => void;
   onLike?: (result: ProfileActionResult) => void;
 }
@@ -41,6 +45,8 @@ export function ProfileCard({
   compact,
   swipeable = false,
   dragX,
+  onSwipeComplete,
+  onActionError,
   onPass,
   onLike,
 }: ProfileCardProps) {
@@ -48,8 +54,6 @@ export function ProfileCard({
   const x = dragX ?? localX;
   const reduceMotion = useReducedMotion();
   const rotate = useTransform(x, [-320, 0, 320], [-14, 0, 14]);
-  const cardScale = useTransform(x, [-360, 0, 360], [0.97, 1, 0.97]);
-  const cardOpacity = useTransform(x, [-440, 0, 440], [0.35, 1, 0.35]);
   const likeOpacity = useTransform(x, [24, 145], [0, 1]);
   const passOpacity = useTransform(x, [-145, -24], [1, 0]);
   const actionInFlight = useRef(false);
@@ -67,10 +71,7 @@ export function ProfileCard({
         : { type: "spring", stiffness: 460, damping: 34, mass: 0.72 },
     );
 
-  const swipe = async (
-    action: "like" | "super_like" | "pass",
-    direction: -1 | 1,
-  ) => {
+  const swipe = async (action: SwipeAction, direction: -1 | 1) => {
     if (actionInFlight.current) return;
     actionInFlight.current = true;
     setActing(true);
@@ -81,23 +82,22 @@ export function ProfileCard({
         ? 720
         : Math.max(window.innerWidth * 1.15, 720);
 
-    try {
-      const request = profileService.act(profile.id, action);
-      const exitAnimation = animate(
-        x,
-        direction * exitDistance,
-        reduceMotion
-          ? { duration: 0.16, ease: "easeOut" }
-          : {
-              type: "spring",
-              stiffness: 280,
-              damping: 30,
-              mass: 0.7,
-              velocity: direction * 900,
-            },
-      );
-      const [result] = await Promise.all([request, exitAnimation]);
+    const request = profileService.act(profile.id, action).then(
+      (result) => ({ result, error: null }),
+      (error: unknown) => ({ result: null, error }),
+    );
 
+    await animate(x, direction * exitDistance, {
+      duration: reduceMotion ? 0.1 : 0.18,
+      ease: [0.32, 0.72, 0, 1],
+    });
+    onSwipeComplete?.(action);
+    x.set(0);
+
+    const outcome = await request;
+    try {
+      if (outcome.error || !outcome.result) throw outcome.error;
+      const result = outcome.result;
       if (action === "pass") {
         onPass?.(result);
       } else {
@@ -115,10 +115,8 @@ export function ProfileCard({
         );
         onLike?.(result);
       }
-
-      x.set(0);
     } catch (error) {
-      await settleAtCenter();
+      onActionError?.(action);
       toast.error(
         action === "pass"
           ? "Couldn’t pass this profile"
@@ -206,8 +204,6 @@ export function ProfileCard({
           ? {
               x,
               rotate,
-              scale: cardScale,
-              opacity: cardOpacity,
               touchAction: "pan-y",
             }
           : undefined
@@ -224,10 +220,10 @@ export function ProfileCard({
       }}
       onDragEnd={(_, info) => {
         setDragging(false);
-        const projectedOffset = info.offset.x + info.velocity.x * 0.18;
-        if (projectedOffset > 105) {
+        const projectedOffset = info.offset.x + info.velocity.x * 0.12;
+        if (projectedOffset > 65) {
           void like();
-        } else if (projectedOffset < -105) {
+        } else if (projectedOffset < -65) {
           void pass();
         } else {
           void settleAtCenter();

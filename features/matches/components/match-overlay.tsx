@@ -11,10 +11,16 @@ import type { Profile } from "@/types/domain";
 interface MatchOverlayProps {
   profile: Profile | null;
   chatId?: string | null;
+  chatPending?: boolean;
   onClose: () => void;
 }
 
-export function MatchOverlay({ profile, chatId, onClose }: MatchOverlayProps) {
+export function MatchOverlay({
+  profile,
+  chatId,
+  chatPending,
+  onClose,
+}: MatchOverlayProps) {
   return (
     <AnimatePresence>
       {profile && (
@@ -94,19 +100,28 @@ export function MatchOverlay({ profile, chatId, onClose }: MatchOverlayProps) {
                 decide our first date. What’s your most underrated pick?”
               </p>
             </div>
-            <Link
-              href={chatId ? `/messages/${chatId}` : "/messages"}
-              className="mt-5 block"
-            >
-              <Button
-                fullWidth
-                size="lg"
-                className="bg-white text-primary shadow-float hover:bg-white"
-              >
-                <MessageCircle className="size-5" />
-                Say hello
-              </Button>
-            </Link>
+            <div className="mt-5">
+              {chatPending ? (
+                <Button
+                  fullWidth
+                  size="lg"
+                  loading
+                  aria-label="Preparing your chat"
+                  className="bg-white text-primary shadow-float hover:bg-white"
+                />
+              ) : (
+                <Link href={chatId ? `/messages/${chatId}` : "/messages"}>
+                  <Button
+                    fullWidth
+                    size="lg"
+                    className="bg-white text-primary shadow-float hover:bg-white"
+                  >
+                    <MessageCircle className="size-5" />
+                    Say hello
+                  </Button>
+                </Link>
+              )}
+            </div>
             <button
               type="button"
               onClick={onClose}
