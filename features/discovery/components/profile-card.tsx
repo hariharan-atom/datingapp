@@ -1,6 +1,13 @@
 "use client";
 
-import { motion, useMotionValue, useTransform } from "framer-motion";
+import {
+  animate,
+  motion,
+  type MotionValue,
+  useMotionValue,
+  useReducedMotion,
+  useTransform,
+} from "framer-motion";
 import {
   Bookmark,
   Heart,
@@ -12,7 +19,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { IconButton } from "@/components/ui/icon-button";
@@ -24,6 +31,7 @@ interface ProfileCardProps {
   profile: Profile;
   compact?: boolean;
   swipeable?: boolean;
+  dragX?: MotionValue<number>;
   onPass?: (result: ProfileActionResult) => void;
   onLike?: (result: ProfileActionResult) => void;
 }
@@ -32,63 +40,106 @@ export function ProfileCard({
   profile,
   compact,
   swipeable = false,
+  dragX,
   onPass,
   onLike,
 }: ProfileCardProps) {
-  const x = useMotionValue(0);
-  const rotate = useTransform(x, [-240, 0, 240], [-12, 0, 12]);
-  const likeOpacity = useTransform(x, [20, 130], [0, 1]);
-  const passOpacity = useTransform(x, [-130, -20], [1, 0]);
+  const localX = useMotionValue(0);
+  const x = dragX ?? localX;
+  const reduceMotion = useReducedMotion();
+  const rotate = useTransform(x, [-320, 0, 320], [-14, 0, 14]);
+  const cardScale = useTransform(x, [-360, 0, 360], [0.97, 1, 0.97]);
+  const cardOpacity = useTransform(x, [-440, 0, 440], [0.35, 1, 0.35]);
+  const likeOpacity = useTransform(x, [24, 145], [0, 1]);
+  const passOpacity = useTransform(x, [-145, -24], [1, 0]);
+  const actionInFlight = useRef(false);
+  const didDrag = useRef(false);
   const [dragging, setDragging] = useState(false);
   const [saved, setSaved] = useState(false);
   const [acting, setActing] = useState(false);
 
-  const like = async (kind: "like" | "super_like" = "like") => {
-    if (acting) return;
+  const settleAtCenter = () =>
+    animate(
+      x,
+      0,
+      reduceMotion
+        ? { duration: 0.12 }
+        : { type: "spring", stiffness: 460, damping: 34, mass: 0.72 },
+    );
+
+  const swipe = async (
+    action: "like" | "super_like" | "pass",
+    direction: -1 | 1,
+  ) => {
+    if (actionInFlight.current) return;
+    actionInFlight.current = true;
     setActing(true);
+    setDragging(false);
+
+    const exitDistance =
+      typeof window === "undefined"
+        ? 720
+        : Math.max(window.innerWidth * 1.15, 720);
+
     try {
-      const result = await profileService.act(profile.id, kind);
-      toast.success(
-        result.matched
-          ? `You matched with ${profile.name}!`
-          : kind === "super_like"
-            ? `You super liked ${profile.name}`
-            : `You liked ${profile.name}`,
+      const request = profileService.act(profile.id, action);
+      const exitAnimation = animate(
+        x,
+        direction * exitDistance,
+        reduceMotion
+          ? { duration: 0.16, ease: "easeOut" }
+          : {
+              type: "spring",
+              stiffness: 280,
+              damping: 30,
+              mass: 0.7,
+              velocity: direction * 900,
+            },
+      );
+      const [result] = await Promise.all([request, exitAnimation]);
+
+      if (action === "pass") {
+        onPass?.(result);
+      } else {
+        toast.success(
+          result.matched
+            ? `You matched with ${profile.name}!`
+            : action === "super_like"
+              ? `You super liked ${profile.name}`
+              : `You liked ${profile.name}`,
+          {
+            description: result.matched
+              ? "Start a conversation from Messages."
+              : "We’ll let you know if it’s a match.",
+          },
+        );
+        onLike?.(result);
+      }
+
+      x.set(0);
+    } catch (error) {
+      await settleAtCenter();
+      toast.error(
+        action === "pass"
+          ? "Couldn’t pass this profile"
+          : "Couldn’t save your like",
         {
-          description: result.matched
-            ? "Start a conversation from Messages."
-            : "We’ll let you know if it’s a match.",
+          description:
+            error instanceof Error ? error.message : "Please try again.",
         },
       );
-      onLike?.(result);
-    } catch (error) {
-      toast.error("Couldn’t save your like", {
-        description:
-          error instanceof Error ? error.message : "Please try again.",
-      });
     } finally {
+      actionInFlight.current = false;
       setActing(false);
     }
   };
 
-  const pass = async () => {
-    if (acting) return;
-    setActing(true);
-    try {
-      const result = await profileService.act(profile.id, "pass");
-      onPass?.(result);
-    } catch (error) {
-      toast.error("Couldn’t pass this profile", {
-        description:
-          error instanceof Error ? error.message : "Please try again.",
-      });
-    } finally {
-      setActing(false);
-    }
-  };
+  const like = (kind: "like" | "super_like" = "like") => swipe(kind, 1);
+  const pass = () => swipe("pass", -1);
 
   const bookmark = async () => {
-    if (acting) return;
+    if (actionInFlight.current) return;
+    actionInFlight.current = true;
     const nextSaved = !saved;
     setSaved(nextSaved);
     setActing(true);
@@ -105,6 +156,7 @@ export function ProfileCard({
           error instanceof Error ? error.message : "Please try again.",
       });
     } finally {
+      actionInFlight.current = false;
       setActing(false);
     }
   };
@@ -149,30 +201,60 @@ export function ProfileCard({
 
   return (
     <motion.article
-      style={swipeable ? { x, rotate } : undefined}
-      drag={swipeable ? "x" : false}
-      dragConstraints={{ left: 0, right: 0 }}
-      dragElastic={0.9}
-      onDragStart={() => setDragging(true)}
+      style={
+        swipeable
+          ? {
+              x,
+              rotate,
+              scale: cardScale,
+              opacity: cardOpacity,
+              touchAction: "pan-y",
+            }
+          : undefined
+      }
+      drag={swipeable && !acting ? "x" : false}
+      dragMomentum={false}
+      dragPropagation={false}
+      onDragStart={() => {
+        didDrag.current = false;
+        setDragging(true);
+      }}
+      onDrag={(_, info) => {
+        if (Math.abs(info.offset.x) > 6) didDrag.current = true;
+      }}
       onDragEnd={(_, info) => {
         setDragging(false);
-        if (info.offset.x > 110) void like();
-        if (info.offset.x < -110) void pass();
+        const projectedOffset = info.offset.x + info.velocity.x * 0.18;
+        if (projectedOffset > 105) {
+          void like();
+        } else if (projectedOffset < -105) {
+          void pass();
+        } else {
+          void settleAtCenter();
+        }
       }}
       className={cn(
-        "relative overflow-hidden rounded-[28px] bg-white shadow-float",
+        "relative transform-gpu select-none overflow-hidden rounded-[28px] bg-white shadow-float will-change-transform",
         dragging && "cursor-grabbing",
+        acting && "pointer-events-none",
       )}
     >
       <Link
         href={`/discover/${profile.id}`}
         className="relative block aspect-[4/5] min-h-[440px] overflow-hidden"
-        onClick={(event) => dragging && event.preventDefault()}
+        onClick={(event) => {
+          if (didDrag.current) {
+            event.preventDefault();
+            event.stopPropagation();
+            didDrag.current = false;
+          }
+        }}
       >
         <Image
           src={profile.photo}
           alt={`${profile.name}, ${profile.age}`}
           fill
+          draggable={false}
           priority={profile.id === "ananya"}
           sizes="(max-width: 767px) 100vw, 55vw"
           className="object-cover"

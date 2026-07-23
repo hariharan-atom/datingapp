@@ -1,5 +1,6 @@
 "use client";
 
+import { motion, useMotionValue, useTransform } from "framer-motion";
 import {
   Grid2X2,
   RefreshCw,
@@ -28,10 +29,16 @@ export default function DiscoverPage() {
     profile: Profile;
     chatId: string | null;
   } | null>(null);
+  const swipeX = useMotionValue(0);
+  const nextCardScale = useTransform(swipeX, [-320, 0, 320], [1, 0.955, 1]);
+  const nextCardY = useTransform(swipeX, [-320, 0, 320], [0, 14, 0]);
+  const nextCardOpacity = useTransform(swipeX, [-220, 0, 220], [1, 0.74, 1]);
   const discovery = useDiscovery({});
   const profiles = discovery.data?.pages.flat() ?? [];
   const currentIndex = profiles.length ? index % profiles.length : 0;
   const current = profiles[currentIndex];
+  const nextProfile =
+    profiles.length > 1 ? profiles[(currentIndex + 1) % profiles.length] : null;
 
   const next = () =>
     setIndex((value) => (profiles.length ? (value + 1) % profiles.length : 0));
@@ -98,18 +105,37 @@ export default function DiscoverPage() {
                 {currentIndex + 1} of {profiles.length}
               </p>
             </div>
-            <ProfileCard
-              key={current.id}
-              profile={current}
-              swipeable
-              onPass={next}
-              onLike={(result) => {
-                if (result.matched) {
-                  setMatch({ profile: current, chatId: result.chatId });
-                }
-                next();
-              }}
-            />
+            <div className="relative isolate pb-3">
+              {nextProfile && (
+                <motion.div
+                  key={`next-${nextProfile.id}`}
+                  aria-hidden
+                  style={{
+                    scale: nextCardScale,
+                    y: nextCardY,
+                    opacity: nextCardOpacity,
+                  }}
+                  className="pointer-events-none absolute inset-x-0 top-0 z-0 origin-bottom transform-gpu will-change-transform"
+                >
+                  <ProfileCard profile={nextProfile} />
+                </motion.div>
+              )}
+              <div className="relative z-10">
+                <ProfileCard
+                  key={current.id}
+                  profile={current}
+                  swipeable
+                  dragX={swipeX}
+                  onPass={next}
+                  onLike={(result) => {
+                    if (result.matched) {
+                      setMatch({ profile: current, chatId: result.chatId });
+                    }
+                    next();
+                  }}
+                />
+              </div>
+            </div>
             <p className="mt-4 text-center text-[11px] font-medium text-muted">
               Swipe right to like · left to pass
             </p>
