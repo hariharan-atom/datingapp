@@ -10,6 +10,7 @@ import type { Profile } from "@/types/domain";
 
 interface MatchOverlayProps {
   profile: Profile | null;
+  currentProfile?: Profile | null;
   chatId?: string | null;
   chatPending?: boolean;
   onClose: () => void;
@@ -17,6 +18,7 @@ interface MatchOverlayProps {
 
 export function MatchOverlay({
   profile,
+  currentProfile,
   chatId,
   chatPending,
   onClose,
@@ -75,8 +77,14 @@ export function MatchOverlay({
             <div className="relative mx-auto my-8 flex h-36 w-60 items-center justify-center">
               <div className="absolute left-5 size-32 -rotate-6 overflow-hidden rounded-full border-4 border-white shadow-float">
                 <Image
-                  src="/images/profiles/kabir.webp"
-                  alt="Your profile"
+                  src={
+                    currentProfile?.photo || "/images/profiles/placeholder.svg"
+                  }
+                  alt={
+                    currentProfile
+                      ? `${currentProfile.name}'s profile`
+                      : "Your profile"
+                  }
                   fill
                   className="object-cover"
                 />

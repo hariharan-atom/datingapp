@@ -18,6 +18,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { FilterSheet } from "@/features/discovery/components/filter-sheet";
 import { ProfileCard } from "@/features/discovery/components/profile-card";
 import { MatchOverlay } from "@/features/matches/components/match-overlay";
+import { useCurrentProfile } from "@/hooks/use-current-profile";
 import { useDiscovery } from "@/hooks/use-discovery";
 import type { Profile } from "@/types/domain";
 
@@ -35,6 +36,7 @@ export default function DiscoverPage() {
   const nextCardY = useTransform(swipeX, [-320, 0, 320], [0, 14, 0]);
   const nextCardOpacity = useTransform(swipeX, [-220, 0, 220], [1, 0.74, 1]);
   const discovery = useDiscovery({});
+  const currentProfile = useCurrentProfile();
   const profiles = discovery.data?.pages.flat() ?? [];
   const currentIndex = profiles.length ? index % profiles.length : 0;
   const current = profiles[currentIndex];
@@ -173,6 +175,7 @@ export default function DiscoverPage() {
       <FilterSheet open={filterOpen} onClose={() => setFilterOpen(false)} />
       <MatchOverlay
         profile={match?.profile ?? null}
+        currentProfile={currentProfile.data?.profile ?? null}
         chatId={match?.chatId ?? null}
         chatPending={match?.pending ?? false}
         onClose={() => setMatch(null)}
