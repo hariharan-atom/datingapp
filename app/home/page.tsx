@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useMemo, useState } from "react";
 
 import { AppShell } from "@/components/shell/app-shell";
 import { Avatar } from "@/components/ui/avatar";
@@ -21,10 +22,41 @@ import { useCurrentProfile } from "@/hooks/use-current-profile";
 import { useDiscovery } from "@/hooks/use-discovery";
 import { communities, events } from "@/utils/mock-data";
 
+type ProfileFeed = "ai" | "nearby" | "verified" | "active";
+
 export default function HomePage() {
+  const [profileFeed, setProfileFeed] = useState<ProfileFeed>("ai");
   const discovery = useDiscovery({});
   const currentProfile = useCurrentProfile();
-  const profiles = discovery.data?.pages.flat() ?? [];
+  const profiles = useMemo(
+    () => discovery.data?.pages.flat() ?? [],
+    [discovery.data],
+  );
+  const featuredProfiles = useMemo(() => {
+    const rankedProfiles = [...profiles];
+
+    if (profileFeed === "nearby") {
+      return rankedProfiles.sort(
+        (left, right) => left.distanceKm - right.distanceKm,
+      );
+    }
+
+    if (profileFeed === "verified") {
+      return rankedProfiles
+        .filter((profile) => profile.verified)
+        .sort((left, right) => right.compatibility - left.compatibility);
+    }
+
+    if (profileFeed === "active") {
+      return rankedProfiles
+        .filter((profile) => profile.online)
+        .sort((left, right) => right.compatibility - left.compatibility);
+    }
+
+    return rankedProfiles.sort(
+      (left, right) => right.compatibility - left.compatibility,
+    );
+  }, [profileFeed, profiles]);
   const profileScore = currentProfile.data?.profile.compatibility ?? 0;
 
   return (
@@ -86,23 +118,44 @@ export default function HomePage() {
 
         <section>
           <div className="scrollbar-none mb-4 flex gap-2 overflow-x-auto pb-1">
-            <Chip active icon={<Sparkles className="size-3.5" />}>
+            <Chip
+              active={profileFeed === "ai"}
+              onClick={() => setProfileFeed("ai")}
+              icon={<Sparkles className="size-3.5" />}
+            >
               AI picks
             </Chip>
-            <Chip icon={<MapPin className="size-3.5" />}>Nearby</Chip>
-            <Chip icon={<ShieldCheck className="size-3.5" />}>Verified</Chip>
-            <Chip icon={<Zap className="size-3.5" />}>Active now</Chip>
+            <Chip
+              active={profileFeed === "nearby"}
+              onClick={() => setProfileFeed("nearby")}
+              icon={<MapPin className="size-3.5" />}
+            >
+              Nearby
+            </Chip>
+            <Chip
+              active={profileFeed === "verified"}
+              onClick={() => setProfileFeed("verified")}
+              icon={<ShieldCheck className="size-3.5" />}
+            >
+              Verified
+            </Chip>
+            <Chip
+              active={profileFeed === "active"}
+              onClick={() => setProfileFeed("active")}
+              icon={<Zap className="size-3.5" />}
+            >
+              Active now
+            </Chip>
           </div>
           {discovery.isLoading ? (
             <Skeleton className="h-[560px] rounded-[28px]" />
-          ) : profiles[0] ? (
-            <ProfileCard profile={profiles[0]} />
+          ) : featuredProfiles[0] ? (
+            <ProfileCard profile={featuredProfiles[0]} />
           ) : (
             <div className="rounded-card border border-dashed border-primary/20 bg-primary-soft/40 px-6 py-10 text-center">
-              <p className="font-bold">Your community is growing</p>
+              <p className="font-bold">No profiles in this group yet</p>
               <p className="mt-2 text-sm leading-6 text-muted">
-                Completed profiles from your friends will appear here
-                automatically.
+                Try another filter while your community keeps growing.
               </p>
               <Link
                 href="/discover"

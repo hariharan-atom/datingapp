@@ -23,6 +23,7 @@ export function Chip({
     <motion.button
       type="button"
       onClick={onClick}
+      aria-pressed={onClick ? Boolean(active) : undefined}
       whileTap={{ scale: 0.96 }}
       className={cn(
         "inline-flex h-10 shrink-0 items-center gap-2 rounded-2xl border border-border bg-white px-4 text-sm font-medium text-muted transition-colors",
