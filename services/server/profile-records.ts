@@ -192,10 +192,11 @@ export async function loadProfiles(
           Number(right.is_primary) - Number(left.is_primary) ||
           left.sort_order - right.sort_order,
       );
-    const photoUrls = photoRows.map(
-      (photo) =>
-        admin.storage.from("profile-photos").getPublicUrl(photo.storage_path)
-          .data.publicUrl,
+    const photoUrls = photoRows.map((photo) =>
+      photo.storage_path.startsWith("/")
+        ? photo.storage_path
+        : admin.storage.from("profile-photos").getPublicUrl(photo.storage_path)
+            .data.publicUrl,
     );
     const fallbackPhoto = "/images/profiles/placeholder.svg";
     const profileInterests = interests

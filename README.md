@@ -90,6 +90,12 @@ supabase db push
 supabase functions deploy ai-assistant
 ```
 
+Seed the four temporary launch profiles after the schema is available:
+
+```bash
+npm run seed:profiles
+```
+
 Account registration uses a server-only Supabase admin client to create a
 confirmed email/password user without sending a verification email. Keep
 `SUPABASE_SERVICE_ROLE_KEY` server-only and configure it in Vercel; never expose

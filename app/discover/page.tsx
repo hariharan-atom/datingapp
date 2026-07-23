@@ -24,12 +24,17 @@ export default function DiscoverPage() {
   const [view, setView] = useState<"swipe" | "grid">("swipe");
   const [filterOpen, setFilterOpen] = useState(false);
   const [index, setIndex] = useState(0);
-  const [match, setMatch] = useState<Profile | null>(null);
+  const [match, setMatch] = useState<{
+    profile: Profile;
+    chatId: string | null;
+  } | null>(null);
   const discovery = useDiscovery({});
   const profiles = discovery.data?.pages.flat() ?? [];
-  const current = profiles[index];
+  const currentIndex = profiles.length ? index % profiles.length : 0;
+  const current = profiles[currentIndex];
 
-  const next = () => setIndex((value) => value + 1);
+  const next = () =>
+    setIndex((value) => (profiles.length ? (value + 1) % profiles.length : 0));
 
   return (
     <AppShell title="Discover" right="messages">
@@ -90,7 +95,7 @@ export default function DiscoverPage() {
                 Recommended for you
               </p>
               <p className="text-xs font-semibold text-muted">
-                {index + 1} of {profiles.length}
+                {currentIndex + 1} of {profiles.length}
               </p>
             </div>
             <ProfileCard
@@ -99,7 +104,9 @@ export default function DiscoverPage() {
               swipeable
               onPass={next}
               onLike={(result) => {
-                if (result.matched) setMatch(current);
+                if (result.matched) {
+                  setMatch({ profile: current, chatId: result.chatId });
+                }
                 next();
               }}
             />
@@ -116,7 +123,11 @@ export default function DiscoverPage() {
         )}
       </div>
       <FilterSheet open={filterOpen} onClose={() => setFilterOpen(false)} />
-      <MatchOverlay profile={match} onClose={() => setMatch(null)} />
+      <MatchOverlay
+        profile={match?.profile ?? null}
+        chatId={match?.chatId ?? null}
+        onClose={() => setMatch(null)}
+      />
     </AppShell>
   );
 }

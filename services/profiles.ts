@@ -137,11 +137,12 @@ export const profileService = {
     reason?: string,
   ): Promise<ProfileActionResult> {
     if (!isSupabaseConfigured()) {
+      const matched = action === "like" || action === "super_like";
       return {
         saved: true,
-        matched: false,
-        matchId: null,
-        chatId: null,
+        matched,
+        matchId: matched ? `match-${profileId}` : null,
+        chatId: matched ? `chat-${profileId}` : null,
       };
     }
 

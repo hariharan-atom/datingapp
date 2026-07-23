@@ -205,20 +205,25 @@ try {
       body: JSON.stringify({ action: "like" }),
     }),
   );
-  assert.equal(firstLike.matched, false, "One-sided like created a match.");
+  assert.equal(
+    firstLike.matched,
+    true,
+    "A right swipe did not create a match.",
+  );
+  assert(firstLike.chatId, "The instant match did not create a chat.");
 
-  const mutualLike = await runStep("Create a mutual match", () =>
+  const mutualLike = await runStep("Reuse the match on a reciprocal like", () =>
     api(`/api/profiles/${memberA.id}/action`, memberB.token, {
       method: "POST",
       body: JSON.stringify({ action: "like" }),
     }),
   );
+  assert.equal(mutualLike.matched, true, "The existing match was not reused.");
   assert.equal(
-    mutualLike.matched,
-    true,
-    "Mutual likes did not create a match.",
+    mutualLike.chatId,
+    firstLike.chatId,
+    "The reciprocal like created a duplicate chat.",
   );
-  assert(mutualLike.chatId, "Mutual match did not create a chat.");
 
   const chatsA = await runStep("Load member A conversations", () =>
     api("/api/chats", memberA.token),
@@ -278,8 +283,24 @@ try {
     "Profile page returned another member.",
   );
 
+  const pass = await runStep("Pass a profile", () =>
+    api(`/api/profiles/${memberB.id}/action`, memberA.token, {
+      method: "POST",
+      body: JSON.stringify({ action: "pass" }),
+    }),
+  );
+  assert.equal(pass.matched, false, "A left swipe was reported as a match.");
+  const discoveryAfterPass = await runStep(
+    "Keep passed profiles in the temporary deck",
+    () => api("/api/profiles/discovery", memberA.token),
+  );
+  assert(
+    discoveryAfterPass.profiles.some((profile) => profile.id === memberB.id),
+    "The temporary repeating deck removed a passed profile.",
+  );
+
   console.log(
-    "Social integration passed: account publication, isolated profiles, mutual matching, chat, persisted messages, and notifications.",
+    "Social integration passed: account publication, repeating discovery, instant matching, chat, persisted messages, passes, and notifications.",
   );
 } finally {
   for (const userId of createdUserIds) {
