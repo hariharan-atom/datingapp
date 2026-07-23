@@ -1,21 +1,14 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  Camera,
-  Check,
-  GripVertical,
-  Instagram,
-  Music2,
-  Sparkles,
-  X,
-} from "lucide-react";
-import Image from "next/image";
+import { Check, Instagram, Music2, Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useCallback, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 
+import { CompressedImagePicker } from "@/components/media/compressed-image-picker";
 import { AppShell } from "@/components/shell/app-shell";
 import { Button } from "@/components/ui/button";
 import { Chip } from "@/components/ui/chip";
@@ -35,6 +28,11 @@ type ProfileForm = z.infer<typeof profileSchema>;
 export default function EditProfilePage() {
   const router = useRouter();
   const me = profiles[3];
+  const [selectedPhotos, setSelectedPhotos] = useState<File[]>([]);
+  const handlePhotoChange = useCallback(
+    (files: File[]) => setSelectedPhotos(files),
+    [],
+  );
   const {
     register,
     handleSubmit,
@@ -55,8 +53,63 @@ export default function EditProfilePage() {
   const bio = watch("bio");
 
   const submit = async () => {
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    toast.success("Profile updated");
+    const supabaseConfigured = Boolean(
+      process.env.NEXT_PUBLIC_SUPABASE_URL &&
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    );
+
+    if (selectedPhotos.length && supabaseConfigured) {
+      const [{ uploadUserImage }, { createClient }] = await Promise.all([
+        import("@/services/media/user-image-upload"),
+        import("@/supabase/client"),
+      ]);
+      const supabase = createClient();
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
+      if (userError) throw userError;
+      if (!user) throw new Error("Sign in before uploading profile photos.");
+
+      const uploaded = [];
+      for (const file of selectedPhotos) {
+        uploaded.push(
+          await uploadUserImage({
+            file,
+            purpose: "profile",
+            ownerId: user.id,
+          }),
+        );
+      }
+
+      const { error: photoError } = await supabase.from("photos").insert(
+        uploaded.map((image, index) => ({
+          user_id: user.id,
+          storage_path: image.path,
+          sort_order: index + 3,
+          is_primary: false,
+          moderation_status: "pending",
+          width: image.width,
+          height: image.height,
+        })),
+      );
+      if (photoError) throw photoError;
+    } else {
+      await new Promise((resolve) => setTimeout(resolve, 350));
+    }
+
+    toast.success(
+      selectedPhotos.length
+        ? `${selectedPhotos.length} compressed photo${
+            selectedPhotos.length === 1 ? "" : "s"
+          } saved`
+        : "Profile updated",
+      {
+        description: selectedPhotos.length
+          ? "Every uploaded image is 150 KB or less."
+          : undefined,
+      },
+    );
     router.push("/profile");
   };
 
@@ -74,45 +127,12 @@ export default function EditProfilePage() {
             </div>
             <span className="text-xs font-bold text-success">4 of 6</span>
           </div>
-          <div className="mt-4 grid grid-cols-3 gap-3">
-            {[me.photo, me.photo, me.photo, null, null, null].map(
-              (photo, index) =>
-                photo && index < 3 ? (
-                  <div
-                    key={index}
-                    className="relative aspect-[3/4] overflow-hidden rounded-[20px] bg-surface"
-                  >
-                    <Image
-                      src={photo}
-                      alt={`Profile photo ${index + 1}`}
-                      fill
-                      sizes="33vw"
-                      className="object-cover"
-                    />
-                    <GripVertical className="absolute left-2 top-2 size-4 text-white drop-shadow" />
-                    {index === 0 && (
-                      <span className="absolute bottom-2 left-2 rounded-full bg-white/85 px-2 py-1 text-[8px] font-bold uppercase backdrop-blur">
-                        Main
-                      </span>
-                    )}
-                    <button
-                      type="button"
-                      className="absolute right-2 top-2 grid size-6 place-items-center rounded-full bg-black/35 text-white"
-                    >
-                      <X className="size-3" />
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    type="button"
-                    key={index}
-                    className="grid aspect-[3/4] place-items-center rounded-[20px] border border-dashed border-secondary/30 bg-secondary/5 text-secondary"
-                  >
-                    <Camera className="size-5" />
-                  </button>
-                ),
-            )}
-          </div>
+          <CompressedImagePicker
+            existingImages={[me.photo, me.photo, me.photo]}
+            maxImages={6}
+            onChange={handlePhotoChange}
+            className="mt-4"
+          />
           <button
             type="button"
             className="mt-3 flex w-full items-center gap-3 rounded-input bg-primary-soft p-3 text-left"

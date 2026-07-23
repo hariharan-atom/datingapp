@@ -24,6 +24,8 @@ receive a purpose-built mobile-only message rather than a desktop layout.
 - Notifications, profile editing, settings, privacy, blocking, reporting,
   incognito mode, and a safety centre
 - PWA service worker, loading/error/empty states, and safe-area support
+- Automatic client-side WebP compression for every user image, with a hard
+  150 KiB limit enforced again by Supabase Storage policies
 
 All people and names shown in local fallback data are fictional. Project images
 were generated specifically for Milo.
@@ -101,6 +103,8 @@ The migration includes:
 - Gifts, claims, and AI suggestions
 - PostGIS discovery RPC
 - Storage buckets and access policies
+- A fail-closed 150 KiB image policy for profile, chat, group, report, and
+  verification images
 - Row Level Security on every user-data table
 - Realtime publication for chat, matches, and notifications
 

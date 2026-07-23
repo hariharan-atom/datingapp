@@ -23,6 +23,7 @@ import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
 import { Chip } from "@/components/ui/chip";
+import { CompressedImagePicker } from "@/components/media/compressed-image-picker";
 
 const onboardingSchema = z.object({
   phone: z
@@ -291,27 +292,10 @@ export default function OnboardingPage() {
                 title="Add your best photos"
                 description="Choose recent, clear photos where you look like yourself."
               >
-                <div className="grid grid-cols-3 gap-3">
-                  {[0, 1, 2, 3, 4, 5].map((item) => (
-                    <button
-                      type="button"
-                      key={item}
-                      className="grid aspect-[3/4] place-items-center rounded-[20px] border border-dashed border-secondary/30 bg-secondary/5 text-secondary"
-                    >
-                      {item === 0 ? (
-                        <Image
-                          src="/images/profiles/kabir.webp"
-                          alt="Selected profile"
-                          width={160}
-                          height={210}
-                          className="size-full rounded-[20px] object-cover"
-                        />
-                      ) : (
-                        <Camera className="size-5" />
-                      )}
-                    </button>
-                  ))}
-                </div>
+                <CompressedImagePicker
+                  existingImages={["/images/profiles/kabir.webp"]}
+                  maxImages={6}
+                />
                 <div className="mt-4 flex gap-3 rounded-card bg-primary-soft p-4">
                   <Sparkles className="size-5 shrink-0 text-primary" />
                   <p className="text-xs leading-5 text-muted">
