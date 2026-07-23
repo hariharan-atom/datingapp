@@ -1,0 +1,100 @@
+"use client";
+
+import {
+  Grid2X2,
+  SlidersHorizontal,
+  Sparkles,
+  SquareStack,
+} from "lucide-react";
+import { useState } from "react";
+
+import { AppShell } from "@/components/shell/app-shell";
+import { Chip } from "@/components/ui/chip";
+import { FilterSheet } from "@/features/discovery/components/filter-sheet";
+import { ProfileCard } from "@/features/discovery/components/profile-card";
+import { MatchOverlay } from "@/features/matches/components/match-overlay";
+import type { Profile } from "@/types/domain";
+import { profiles } from "@/utils/mock-data";
+
+export default function DiscoverPage() {
+  const [view, setView] = useState<"swipe" | "grid">("swipe");
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [index, setIndex] = useState(0);
+  const [match, setMatch] = useState<Profile | null>(null);
+  const current = profiles[index % profiles.length];
+
+  const next = () => setIndex((value) => value + 1);
+
+  return (
+    <AppShell title="Discover" right="search">
+      <div className="px-4 pt-3 min-[768px]:px-6">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex gap-2">
+            <Chip
+              active={view === "swipe"}
+              onClick={() => setView("swipe")}
+              icon={<SquareStack className="size-4" />}
+            >
+              Swipe
+            </Chip>
+            <Chip
+              active={view === "grid"}
+              onClick={() => setView("grid")}
+              icon={<Grid2X2 className="size-4" />}
+            >
+              Grid
+            </Chip>
+          </div>
+          <button
+            type="button"
+            aria-label="Open filters"
+            onClick={() => setFilterOpen(true)}
+            className="relative grid size-11 place-items-center rounded-2xl border border-border bg-white shadow-soft"
+          >
+            <SlidersHorizontal className="size-5" />
+            <span className="absolute right-1.5 top-1.5 size-2 rounded-full bg-primary" />
+          </button>
+        </div>
+
+        {view === "swipe" ? (
+          <div className="mx-auto mt-4 max-w-xl">
+            <div className="mb-3 flex items-center justify-between px-1">
+              <p className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted">
+                <Sparkles className="size-3.5 text-secondary" />
+                AI-curated for you
+              </p>
+              <p className="text-xs font-semibold text-muted">
+                {index + 1} of {profiles.length * 3}
+              </p>
+            </div>
+            <ProfileCard
+              key={current.id}
+              profile={current}
+              swipeable
+              onPass={next}
+              onLike={() => {
+                if (index % 2 === 0) setMatch(current);
+                next();
+              }}
+            />
+            <p className="mt-4 text-center text-[11px] font-medium text-muted">
+              Swipe right to like · left to pass
+            </p>
+          </div>
+        ) : (
+          <div className="mt-5 grid grid-cols-2 gap-3 min-[768px]:grid-cols-3">
+            {[...profiles, ...profiles].map((profile, itemIndex) => (
+              <ProfileCard
+                key={`${profile.id}-${itemIndex}`}
+                profile={profile}
+                compact
+              />
+            ))}
+          </div>
+        )}
+      </div>
+      <FilterSheet open={filterOpen} onClose={() => setFilterOpen(false)} />
+      <MatchOverlay profile={match} onClose={() => setMatch(null)} />
+    </AppShell>
+  );
+}
