@@ -7,6 +7,7 @@ import {
   Sparkles,
   UsersRound,
 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 
@@ -128,10 +129,14 @@ export default function SearchPage() {
                       key={group.id}
                       className="flex items-center gap-3 rounded-card bg-surface p-3"
                     >
-                      <span
-                        className={`grid size-12 place-items-center rounded-[18px] bg-gradient-to-br ${group.gradient} text-xl`}
-                      >
-                        {group.emoji}
+                      <span className="relative block size-12 shrink-0 overflow-hidden rounded-[18px] bg-primary-soft">
+                        <Image
+                          src={group.image}
+                          alt=""
+                          fill
+                          sizes="48px"
+                          className="object-cover"
+                        />
                       </span>
                       <div>
                         <p className="text-sm font-bold">{group.name}</p>

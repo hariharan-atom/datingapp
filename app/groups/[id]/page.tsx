@@ -10,6 +10,7 @@ import {
   Send,
   UsersRound,
 } from "lucide-react";
+import Image from "next/image";
 import { useParams } from "next/navigation";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -33,41 +34,51 @@ export default function GroupDetailsPage() {
 
   return (
     <AppShell title={group.name} back right="notifications">
-      <div
-        className={`relative bg-gradient-to-br ${group.gradient} px-5 pb-7 pt-5 text-white`}
-      >
-        <div className="flex items-start justify-between gap-4">
-          <span className="text-6xl">{group.emoji}</span>
+      <div className="relative min-h-[300px] overflow-hidden px-5 pb-7 pt-5 text-white">
+        <Image
+          src={group.image}
+          alt={`${group.name} community`}
+          fill
+          priority
+          sizes="(max-width: 1024px) 100vw, 1024px"
+          className="object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-black/20" />
+        <div className="relative z-10 flex items-start justify-end gap-4">
           <Button
             variant={joined ? "soft" : "primary"}
-            className={joined ? "bg-white/15 text-white" : ""}
+            className={
+              joined ? "border border-white/20 bg-black/25 text-white" : ""
+            }
             onClick={() => toggleGroup(group.id)}
           >
             {joined ? "Joined" : "Join group"}
           </Button>
         </div>
-        <h1 className="mt-5 text-3xl font-bold tracking-[-0.04em]">
-          {group.name}
-        </h1>
-        <p className="mt-2 max-w-xl text-sm leading-6 text-white/75">
-          {group.description}
-        </p>
-        <div className="mt-5 flex items-center gap-3">
-          <div className="flex -space-x-2">
-            {profiles.slice(0, 3).map((profile) => (
-              <Avatar
-                key={profile.id}
-                src={profile.photo}
-                alt={profile.name}
-                size="sm"
-                className="rounded-full border-2 border-white"
-              />
-            ))}
-          </div>
-          <p className="flex items-center gap-1 text-xs font-semibold text-white/80">
-            <UsersRound className="size-4" />
-            {group.members.toLocaleString("en-IN")} members
+        <div className="relative z-10 mt-24">
+          <h1 className="text-3xl font-bold tracking-[-0.04em]">
+            {group.name}
+          </h1>
+          <p className="mt-2 max-w-xl text-sm leading-6 text-white/80">
+            {group.description}
           </p>
+          <div className="mt-5 flex items-center gap-3">
+            <div className="flex -space-x-2">
+              {profiles.slice(0, 3).map((profile) => (
+                <Avatar
+                  key={profile.id}
+                  src={profile.photo}
+                  alt={profile.name}
+                  size="sm"
+                  className="rounded-full border-2 border-white"
+                />
+              ))}
+            </div>
+            <p className="flex items-center gap-1 text-xs font-semibold text-white/85">
+              <UsersRound className="size-4" />
+              {group.members.toLocaleString("en-IN")} members
+            </p>
+          </div>
         </div>
       </div>
       <div className="sticky top-[calc(60px+var(--safe-top))] z-20 border-b border-border bg-white/90 px-4 py-3 backdrop-blur-xl">

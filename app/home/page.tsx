@@ -8,6 +8,7 @@ import {
   Sparkles,
   Zap,
 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 
 import { AppShell } from "@/components/shell/app-shell";
@@ -180,10 +181,14 @@ export default function HomePage() {
                 key={group.id}
                 className="flex items-center gap-4 rounded-card border border-border bg-white p-4 shadow-soft"
               >
-                <span
-                  className={`grid size-14 shrink-0 place-items-center rounded-[20px] bg-gradient-to-br ${group.gradient} text-2xl shadow-soft`}
-                >
-                  {group.emoji}
+                <span className="relative block size-14 shrink-0 overflow-hidden rounded-[20px] bg-primary-soft shadow-soft">
+                  <Image
+                    src={group.image}
+                    alt=""
+                    fill
+                    sizes="56px"
+                    className="object-cover"
+                  />
                 </span>
                 <div className="min-w-0 flex-1">
                   <h3 className="truncate font-bold">{group.name}</h3>

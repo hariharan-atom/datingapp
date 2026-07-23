@@ -56,13 +56,12 @@ export interface ChatMessage {
 export interface Community {
   id: string;
   name: string;
-  emoji: string;
+  image: string;
   category: string;
   members: number;
   description: string;
   joined: boolean;
   privacy: "Public" | "Private";
-  gradient: string;
 }
 
 export interface NearbyEvent {

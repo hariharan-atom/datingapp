@@ -1,6 +1,7 @@
 "use client";
 
 import { Lock, Plus, UsersRound } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -71,21 +72,28 @@ export default function GroupsPage() {
                 >
                   <Link
                     href={`/groups/${group.id}`}
-                    className={`relative block bg-gradient-to-br ${group.gradient} p-5 text-white`}
+                    className="relative block aspect-[16/10] overflow-hidden text-white"
                   >
-                    <div className="flex items-start justify-between">
-                      <span className="text-5xl">{group.emoji}</span>
-                      <span className="flex items-center gap-1 rounded-full bg-black/15 px-2.5 py-1 text-[10px] font-bold backdrop-blur">
-                        {group.privacy === "Private" && (
-                          <Lock className="size-3" />
-                        )}
-                        {group.privacy}
-                      </span>
+                    <Image
+                      src={group.image}
+                      alt={`${group.name} community`}
+                      fill
+                      sizes="(max-width: 767px) calc(100vw - 32px), 46vw"
+                      className="object-cover transition-transform duration-500 hover:scale-[1.03]"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/15 to-black/5" />
+                    <span className="absolute right-4 top-4 flex items-center gap-1 rounded-full bg-black/30 px-2.5 py-1 text-[10px] font-bold backdrop-blur-md">
+                      {group.privacy === "Private" && (
+                        <Lock className="size-3" />
+                      )}
+                      {group.privacy}
+                    </span>
+                    <div className="absolute inset-x-0 bottom-0 p-5">
+                      <h2 className="text-2xl font-bold">{group.name}</h2>
+                      <p className="mt-2 line-clamp-2 text-sm leading-5 text-white/80">
+                        {group.description}
+                      </p>
                     </div>
-                    <h2 className="mt-6 text-2xl font-bold">{group.name}</h2>
-                    <p className="mt-2 text-sm leading-5 text-white/75">
-                      {group.description}
-                    </p>
                   </Link>
                   <div className="flex items-center gap-3 p-4">
                     <div className="min-w-0 flex-1">
