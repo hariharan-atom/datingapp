@@ -37,7 +37,7 @@ export function CompressedImagePicker({
       <input
         ref={inputRef}
         type="file"
-        accept="image/jpeg,image/png,image/webp"
+        accept="image/*,.heic,.heif,.avif"
         multiple
         className="sr-only"
         onChange={async (event) => {

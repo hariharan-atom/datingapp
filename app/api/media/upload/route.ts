@@ -46,8 +46,13 @@ function rateLimited(userId: string) {
   return current.count > MAX_ATTEMPTS;
 }
 
-function isWebP(bytes: Uint8Array) {
-  return (
+interface EncodedImageFormat {
+  contentType: "image/jpeg" | "image/png" | "image/webp";
+  extension: "jpg" | "png" | "webp";
+}
+
+function detectImageFormat(bytes: Uint8Array): EncodedImageFormat | null {
+  const isWebP =
     bytes.length >= 12 &&
     bytes[0] === 0x52 &&
     bytes[1] === 0x49 &&
@@ -56,8 +61,29 @@ function isWebP(bytes: Uint8Array) {
     bytes[8] === 0x57 &&
     bytes[9] === 0x45 &&
     bytes[10] === 0x42 &&
-    bytes[11] === 0x50
-  );
+    bytes[11] === 0x50;
+  if (isWebP) return { contentType: "image/webp", extension: "webp" };
+
+  const isPng =
+    bytes.length >= 8 &&
+    bytes[0] === 0x89 &&
+    bytes[1] === 0x50 &&
+    bytes[2] === 0x4e &&
+    bytes[3] === 0x47 &&
+    bytes[4] === 0x0d &&
+    bytes[5] === 0x0a &&
+    bytes[6] === 0x1a &&
+    bytes[7] === 0x0a;
+  if (isPng) return { contentType: "image/png", extension: "png" };
+
+  const isJpeg =
+    bytes.length >= 3 &&
+    bytes[0] === 0xff &&
+    bytes[1] === 0xd8 &&
+    bytes[2] === 0xff;
+  if (isJpeg) return { contentType: "image/jpeg", extension: "jpg" };
+
+  return null;
 }
 
 async function getAuthenticatedUser(request: NextRequest) {
@@ -81,6 +107,7 @@ async function resolveStorageTarget(
   admin: ReturnType<typeof createAdminClient>,
   userId: string,
   purpose: z.infer<typeof uploadSchema>["purpose"],
+  extension: EncodedImageFormat["extension"],
   targetId?: string,
 ) {
   const objectId = crypto.randomUUID();
@@ -89,18 +116,18 @@ async function resolveStorageTarget(
     case "profile":
       return {
         bucket: "profile-photos",
-        path: `${userId}/${objectId}.webp`,
+        path: `${userId}/${objectId}.${extension}`,
       };
     case "verification":
       return {
         bucket: "verification",
-        path: `${userId}/images/${objectId}.webp`,
+        path: `${userId}/images/${objectId}.${extension}`,
       };
     case "group":
     case "report":
       return {
         bucket: "user-images",
-        path: `${userId}/${purpose}/${targetId ?? "general"}/${objectId}.webp`,
+        path: `${userId}/${purpose}/${targetId ?? "general"}/${objectId}.${extension}`,
       };
     case "chat": {
       if (!targetId) {
@@ -120,7 +147,7 @@ async function resolveStorageTarget(
 
       return {
         bucket: "chat-media",
-        path: `${targetId}/${userId}/${objectId}.webp`,
+        path: `${targetId}/${userId}/${objectId}.${extension}`,
       };
     }
   }
@@ -164,21 +191,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (
-      file.size <= 0 ||
-      file.size > MAX_USER_IMAGE_BYTES ||
-      file.type !== "image/webp"
-    ) {
+    if (file.size <= 0 || file.size > MAX_USER_IMAGE_BYTES) {
       return NextResponse.json(
-        { message: "The compressed image must be a WebP file under 150 KB." },
+        { message: "The compressed image must be under 150 KB." },
         { status: 413 },
       );
     }
 
     const bytes = new Uint8Array(await file.arrayBuffer());
-    if (!isWebP(bytes)) {
+    const format = detectImageFormat(bytes);
+    if (!format) {
       return NextResponse.json(
-        { message: "The uploaded file is not a valid WebP image." },
+        { message: "The uploaded file is not a valid image." },
         { status: 400 },
       );
     }
@@ -187,13 +211,14 @@ export async function POST(request: NextRequest) {
       admin,
       user.id,
       parsed.data.purpose,
+      format.extension,
       parsed.data.targetId,
     );
     const { error } = await admin.storage
       .from(target.bucket)
       .upload(target.path, bytes, {
         cacheControl: "31536000",
-        contentType: "image/webp",
+        contentType: format.contentType,
         upsert: false,
       });
 

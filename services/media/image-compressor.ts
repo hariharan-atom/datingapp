@@ -1,14 +1,24 @@
 export const MAX_USER_IMAGE_BYTES = 150 * 1024;
 export const MAX_USER_IMAGE_INPUT_BYTES = 20 * 1024 * 1024;
 
-const SUPPORTED_IMAGE_TYPES = new Set([
-  "image/jpeg",
-  "image/png",
-  "image/webp",
+const KNOWN_IMAGE_EXTENSIONS = new Set([
+  "avif",
+  "bmp",
+  "gif",
+  "heic",
+  "heif",
+  "jfif",
+  "jpeg",
+  "jpg",
+  "png",
+  "tif",
+  "tiff",
+  "webp",
 ]);
-const OUTPUT_TYPE = "image/webp";
+const OUTPUT_TYPE = "image/jpeg";
+const OUTPUT_EXTENSION = "jpg";
 const MAX_DIMENSION = 1600;
-const MIN_DIMENSION = 320;
+const MIN_DIMENSION = 160;
 const MIN_QUALITY = 0.18;
 const MAX_QUALITY = 0.9;
 
@@ -99,26 +109,81 @@ function createOutputName(name: string) {
       .replace(/^-+|-+$/g, "")
       .slice(0, 80) || "image";
 
-  return `${base}.webp`;
+  return `${base}.${OUTPUT_EXTENSION}`;
+}
+
+interface DecodedImage {
+  source: CanvasImageSource;
+  width: number;
+  height: number;
+  close: () => void;
 }
 
 async function decodeImage(file: File) {
+  if (typeof createImageBitmap === "function") {
+    try {
+      const bitmap = await createImageBitmap(file, {
+        imageOrientation: "from-image",
+      });
+      return {
+        source: bitmap,
+        width: bitmap.width,
+        height: bitmap.height,
+        close: () => bitmap.close(),
+      } satisfies DecodedImage;
+    } catch {
+      try {
+        const bitmap = await createImageBitmap(file);
+        return {
+          source: bitmap,
+          width: bitmap.width,
+          height: bitmap.height,
+          close: () => bitmap.close(),
+        } satisfies DecodedImage;
+      } catch {
+        // Safari can decode some native photo formats through an image element
+        // even when createImageBitmap cannot.
+      }
+    }
+  }
+
+  const objectUrl = URL.createObjectURL(file);
   try {
-    return await createImageBitmap(file, {
-      imageOrientation: "from-image",
-    });
+    const image = new Image();
+    image.decoding = "async";
+    image.src = objectUrl;
+    await image.decode();
+
+    if (!image.naturalWidth || !image.naturalHeight) {
+      throw new Error("The decoded image has no dimensions.");
+    }
+
+    return {
+      source: image,
+      width: image.naturalWidth,
+      height: image.naturalHeight,
+      close: () => URL.revokeObjectURL(objectUrl),
+    } satisfies DecodedImage;
   } catch {
+    URL.revokeObjectURL(objectUrl);
     throw new ImageCompressionError(
       "decode_failed",
-      "We could not read this image. Try a JPEG, PNG, or WebP file.",
+      "We could not read this image. Choose any photo format supported by your device.",
     );
   }
 }
 
+function isSupportedImageInput(file: File) {
+  if (file.type.toLowerCase().startsWith("image/")) return true;
+  const extension = file.name.split(".").pop()?.toLowerCase();
+  return Boolean(extension && KNOWN_IMAGE_EXTENSIONS.has(extension));
+}
+
 /**
- * Converts a user image to WebP and finds the highest useful quality that fits
- * beneath the hard byte budget. Metadata, including EXIF location data, is
- * removed because the pixels are redrawn onto a fresh canvas.
+ * Decodes any browser-supported image and normalizes it to JPEG, the most
+ * consistently encodable format across iOS Safari, Android, and Chromium.
+ * Metadata, including EXIF location data, is removed because the pixels are
+ * redrawn onto a fresh canvas.
  */
 export async function compressUserImage(
   file: File,
@@ -127,10 +192,10 @@ export async function compressUserImage(
   const maxBytes = options.maxBytes ?? MAX_USER_IMAGE_BYTES;
   const maxDimension = options.maxDimension ?? MAX_DIMENSION;
 
-  if (!SUPPORTED_IMAGE_TYPES.has(file.type)) {
+  if (!isSupportedImageInput(file)) {
     throw new ImageCompressionError(
       "unsupported_type",
-      "Choose a JPEG, PNG, or WebP image.",
+      "Choose an image file supported by your device.",
     );
   }
   if (file.size > MAX_USER_IMAGE_INPUT_BYTES) {
@@ -162,7 +227,7 @@ export async function compressUserImage(
       const canvas = document.createElement("canvas");
       canvas.width = width;
       canvas.height = height;
-      const context = canvas.getContext("2d", { alpha: true });
+      const context = canvas.getContext("2d", { alpha: false });
 
       if (!context) {
         throw new ImageCompressionError(
@@ -173,7 +238,9 @@ export async function compressUserImage(
 
       context.imageSmoothingEnabled = true;
       context.imageSmoothingQuality = "high";
-      context.drawImage(bitmap, 0, 0, width, height);
+      context.fillStyle = "#ffffff";
+      context.fillRect(0, 0, width, height);
+      context.drawImage(bitmap.source, 0, 0, width, height);
 
       let low = MIN_QUALITY;
       let high = MAX_QUALITY;
@@ -217,7 +284,7 @@ export async function compressUserImage(
     }
 
     const output = new File([best.blob], createOutputName(file.name), {
-      type: OUTPUT_TYPE,
+      type: best.blob.type || OUTPUT_TYPE,
       lastModified: Date.now(),
     });
 
