@@ -58,19 +58,13 @@ export default function HomePage() {
                 key={profile.id}
                 className="flex w-[72px] shrink-0 flex-col items-center gap-2"
               >
-                <span className="relative isolate grid size-[68px] place-items-center rounded-full bg-gradient-to-br from-primary via-accent to-secondary p-[2px]">
-                  <span className="relative size-full overflow-hidden rounded-full border-[3px] border-white bg-white">
-                    <Avatar
-                      src={profile.photo}
-                      alt={profile.name}
-                      size="lg"
-                      className="size-full"
-                    />
-                  </span>
-                  {profile.online && (
-                    <span className="absolute -right-0.5 bottom-1 z-20 size-4 rounded-full border-[3px] border-white bg-success shadow-sm" />
-                  )}
-                </span>
+                <Avatar
+                  src={profile.photo}
+                  alt={profile.name}
+                  size="lg"
+                  ring
+                  online={profile.online}
+                />
                 <span className="w-full truncate text-center text-[11px] font-semibold">
                   {profile.name}
                 </span>

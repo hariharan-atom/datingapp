@@ -33,9 +33,9 @@ export default function MessagesPage() {
           <div className="scrollbar-none -mx-4 mt-3 flex gap-4 overflow-x-auto px-4 pb-2 min-[768px]:-mx-6 min-[768px]:px-6">
             <button
               type="button"
-              className="flex w-16 shrink-0 flex-col items-center gap-2"
+              className="flex w-[72px] shrink-0 flex-col items-center gap-2"
             >
-              <span className="grid size-16 place-items-center rounded-full bg-primary-soft text-primary">
+              <span className="grid size-[68px] place-items-center rounded-full bg-primary-soft text-primary">
                 <Heart className="size-6" fill="currentColor" />
               </span>
               <span className="text-[11px] font-semibold">Likes</span>
@@ -44,18 +44,15 @@ export default function MessagesPage() {
               <button
                 type="button"
                 key={profile.id}
-                className="flex w-16 shrink-0 flex-col items-center gap-2"
+                className="flex w-[72px] shrink-0 flex-col items-center gap-2"
               >
-                <span className="rounded-full bg-gradient-to-br from-primary to-secondary p-[2px]">
-                  <span className="block rounded-full bg-white p-[2px]">
-                    <Avatar
-                      src={profile.photo}
-                      alt={profile.name}
-                      size="lg"
-                      online={profile.online}
-                    />
-                  </span>
-                </span>
+                <Avatar
+                  src={profile.photo}
+                  alt={profile.name}
+                  size="lg"
+                  ring
+                  online={profile.online}
+                />
                 <span className="w-full truncate text-center text-[11px] font-semibold">
                   {profile.name}
                 </span>
