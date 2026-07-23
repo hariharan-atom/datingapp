@@ -1,4 +1,4 @@
-const CACHE = "milo-shell-v1";
+const CACHE = "the-atom-shell-v2";
 const SHELL = ["/", "/home", "/discover", "/messages", "/groups", "/profile"];
 
 self.addEventListener("install", (event) => {

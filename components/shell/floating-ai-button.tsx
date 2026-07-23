@@ -15,8 +15,8 @@ export function FloatingAiButton() {
     >
       <Link
         href="/ai"
-        aria-label="Open Milo AI"
-        className="relative grid size-14 place-items-center overflow-hidden rounded-full bg-gradient-to-br from-primary via-[#ef5da8] to-secondary text-white shadow-glow"
+        aria-label="Open The Atom AI"
+        className="relative grid size-14 place-items-center overflow-hidden rounded-full bg-gradient-to-br from-primary via-[#3B82F6] to-secondary text-white shadow-glow"
       >
         <motion.span
           animate={{ rotate: 360 }}

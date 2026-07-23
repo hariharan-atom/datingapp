@@ -36,28 +36,27 @@ export function BottomNavigation() {
             <Link
               href={item.href}
               key={item.href}
-              className="relative flex min-w-0 flex-col items-center justify-center gap-1"
+              className="relative grid min-w-0 grid-rows-[44px_16px] place-items-center px-0.5 pb-1 pt-1.5"
               aria-label={item.label}
             >
               {active && (
                 <motion.span
                   layoutId="active-nav"
                   transition={{ type: "spring", stiffness: 480, damping: 35 }}
-                  className="absolute top-2 h-10 w-12 rounded-2xl bg-gradient-to-br from-primary to-secondary shadow-[0_8px_20px_rgba(255,77,109,0.28)]"
+                  className="absolute top-1.5 size-10 rounded-[15px] bg-gradient-to-br from-primary to-secondary shadow-[0_8px_20px_rgba(37,99,235,0.28)]"
                 />
               )}
               <motion.span
                 animate={{ scale: active ? 1.08 : 1 }}
-                className="relative z-10"
+                className="relative z-10 grid size-10 place-items-center self-start"
               >
                 <Icon
                   className={cn(
                     "size-5 transition-colors",
                     active ? "text-white" : "text-muted",
                   )}
-                  fill={
-                    active && item.label === "Home" ? "currentColor" : "none"
-                  }
+                  fill="none"
+                  strokeWidth={active ? 2.25 : 2}
                 />
                 {!!item.badge && !active && (
                   <span className="absolute -right-2 -top-2 grid min-w-4 place-items-center rounded-full bg-primary px-1 text-[9px] font-bold leading-4 text-white">
@@ -67,7 +66,7 @@ export function BottomNavigation() {
               </motion.span>
               <span
                 className={cn(
-                  "relative z-10 max-w-full truncate text-[10px] font-semibold",
+                  "relative z-10 max-w-full self-end truncate text-[10px] font-semibold leading-none",
                   active ? "text-primary" : "text-muted",
                 )}
               >

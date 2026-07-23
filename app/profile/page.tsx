@@ -108,7 +108,7 @@ export default function ProfilePage() {
           })}
         </section>
 
-        <section className="mt-5 overflow-hidden rounded-card bg-gradient-to-br from-[#211747] to-secondary p-5 text-white">
+        <section className="mt-5 overflow-hidden rounded-card bg-gradient-to-br from-[#0B1F3A] to-secondary p-5 text-white">
           <div className="flex items-start gap-4">
             <span className="grid size-12 shrink-0 place-items-center rounded-[18px] bg-white/10">
               <Sparkles className="size-5 text-accent" />

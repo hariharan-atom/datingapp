@@ -27,7 +27,7 @@ export function Chip({
       className={cn(
         "inline-flex h-10 shrink-0 items-center gap-2 rounded-2xl border border-border bg-white px-4 text-sm font-medium text-muted transition-colors",
         active &&
-          "border-primary bg-primary text-white shadow-[0_8px_22px_rgba(255,77,109,0.24)]",
+          "border-primary bg-primary text-white shadow-[0_8px_22px_rgba(37,99,235,0.24)]",
         className,
       )}
     >

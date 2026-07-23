@@ -1,6 +1,6 @@
-# Milo
+# The Atom
 
-Milo is a production-oriented, mobile-only dating web application for India. It
+The Atom is a production-oriented, mobile-only dating web application for India. It
 uses Next.js 15, React 19, TypeScript, Tailwind CSS, Supabase, Framer Motion,
 TanStack Query, React Hook Form, Zod, Embla, Virtuoso, Leaflet, and
 OpenStreetMap.
@@ -28,7 +28,7 @@ receive a purpose-built mobile-only message rather than a desktop layout.
   150 KiB limit enforced again by Supabase Storage policies
 
 All people and names shown in local fallback data are fictional. Project images
-were generated specifically for Milo.
+were generated specifically for The Atom.
 
 ## Architecture
 

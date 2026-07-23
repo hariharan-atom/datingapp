@@ -214,7 +214,7 @@ export const communities: Community[] = [
     description: "Films, screenings, and politely intense debates.",
     joined: false,
     privacy: "Public",
-    gradient: "from-violet-500 to-indigo-700",
+    gradient: "from-sky-500 to-blue-700",
   },
   {
     id: "build-in-public",
@@ -249,7 +249,7 @@ export const events: NearbyEvent[] = [
     distanceKm: 1.8,
     attendees: 48,
     category: "Dating",
-    gradient: "from-primary to-rose-400",
+    gradient: "from-primary to-sky-400",
   },
   {
     id: "coffee-club",
@@ -288,7 +288,7 @@ export const gifts: Gift[] = [
     emoji: "🎟️",
     description: "One cinema voucher",
     value: "₹500",
-    color: "bg-violet-50",
+    color: "bg-sky-50",
   },
   {
     id: "flowers",
@@ -296,7 +296,7 @@ export const gifts: Gift[] = [
     emoji: "💐",
     description: "Seasonal bouquet delivery",
     value: "₹699",
-    color: "bg-rose-50",
+    color: "bg-blue-50",
   },
   {
     id: "chocolate",

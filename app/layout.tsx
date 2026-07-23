@@ -15,8 +15,8 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: "Milo — Meet with intention",
-    template: "%s · Milo",
+    default: "The Atom — Meet with intention",
+    template: "%s · The Atom",
   },
   description:
     "A thoughtful, safety-first dating experience built for meaningful connections in India.",
@@ -24,7 +24,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Milo",
+    title: "The Atom",
   },
   formatDetection: {
     telephone: false,

@@ -72,8 +72,8 @@ export function ConversationList({
             <div>
               <p className="text-sm font-bold">Conversation check-in</p>
               <p className="mt-1 text-xs leading-5 text-muted">
-                Milo can suggest kinder replies and flag unsafe language. Your
-                private chats are never used to train shared models.
+                The Atom can suggest kinder replies and flag unsafe language.
+                Your private chats are never used to train shared models.
               </p>
             </div>
           </div>

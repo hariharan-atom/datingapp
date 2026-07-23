@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 
 export default function NotFound() {
   return (
-    <div className="safe-top grid min-h-dvh place-items-center bg-[radial-gradient(circle_at_top,#fff0f3,#fff_55%)] px-6">
+    <div className="safe-top grid min-h-dvh place-items-center bg-[radial-gradient(circle_at_top,#eff6ff,#fff_55%)] px-6">
       <div className="max-w-sm text-center">
         <span className="mx-auto grid size-20 place-items-center rounded-[28px] bg-white text-primary shadow-soft">
           <Compass className="size-8" />

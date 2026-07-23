@@ -18,7 +18,7 @@ interface ButtonProps extends Omit<HTMLMotionProps<"button">, "ref"> {
 
 const variants: Record<ButtonVariant, string> = {
   primary:
-    "bg-gradient-to-r from-primary to-[#ff6a84] text-white shadow-glow hover:from-primary-hover hover:to-primary",
+    "bg-gradient-to-r from-primary to-[#60A5FA] text-white shadow-glow hover:from-primary-hover hover:to-primary",
   secondary: "bg-secondary text-white shadow-soft",
   soft: "bg-primary-soft text-primary",
   ghost: "bg-transparent text-ink hover:bg-surface",

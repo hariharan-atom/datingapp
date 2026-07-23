@@ -21,7 +21,7 @@ export default function SafetyPage() {
   return (
     <AppShell title="Safety centre" back hideAi>
       <div className="mx-auto max-w-2xl px-4 py-5 min-[768px]:px-6">
-        <section className="overflow-hidden rounded-[28px] bg-gradient-to-br from-[#17122f] to-secondary p-6 text-white">
+        <section className="overflow-hidden rounded-[28px] bg-gradient-to-br from-[#0B1F3A] to-secondary p-6 text-white">
           <ShieldCheck className="size-9 text-accent" />
           <h1 className="mt-5 text-3xl font-bold tracking-[-0.04em]">
             Your comfort comes first.
@@ -61,7 +61,7 @@ export default function SafetyPage() {
                 icon: EyeOff,
                 label: "Hide",
                 text: "Remove from discovery",
-                color: "bg-violet-50 text-secondary",
+                color: "bg-sky-50 text-secondary",
               },
               {
                 icon: VolumeX,
@@ -145,7 +145,7 @@ export default function SafetyPage() {
           <HeartHandshake className="size-6 text-primary" />
           <h2 className="mt-3 text-lg font-bold">Need help right now?</h2>
           <p className="mt-2 text-sm leading-6 text-muted">
-            Contact Milo’s safety team, share a date plan with someone you
+            Contact The Atom’s safety team, share a date plan with someone you
             trust, or access local emergency guidance.
           </p>
           <Button variant="soft" className="mt-4 bg-white">

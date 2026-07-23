@@ -43,8 +43,8 @@ export default function HomePage() {
               href="/discover"
               className="flex w-[72px] shrink-0 flex-col items-center gap-2"
             >
-              <span className="grid size-16 place-items-center rounded-full bg-gradient-to-br from-primary to-secondary p-[2px]">
-                <span className="grid size-full place-items-center rounded-full bg-white">
+              <span className="grid size-[68px] place-items-center rounded-full bg-gradient-to-br from-primary to-secondary p-[2px]">
+                <span className="grid size-full place-items-center rounded-full border-[3px] border-white bg-white">
                   <Sparkles className="size-6 text-primary" />
                 </span>
               </span>
@@ -58,15 +58,18 @@ export default function HomePage() {
                 key={profile.id}
                 className="flex w-[72px] shrink-0 flex-col items-center gap-2"
               >
-                <span className="rounded-full bg-gradient-to-br from-primary via-accent to-secondary p-[2px]">
-                  <span className="block rounded-full bg-white p-[2px]">
+                <span className="relative isolate grid size-[68px] place-items-center rounded-full bg-gradient-to-br from-primary via-accent to-secondary p-[2px]">
+                  <span className="relative size-full overflow-hidden rounded-full border-[3px] border-white bg-white">
                     <Avatar
                       src={profile.photo}
                       alt={profile.name}
                       size="lg"
-                      online={profile.online}
+                      className="size-full"
                     />
                   </span>
+                  {profile.online && (
+                    <span className="absolute -right-0.5 bottom-1 z-20 size-4 rounded-full border-[3px] border-white bg-success shadow-sm" />
+                  )}
                 </span>
                 <span className="w-full truncate text-center text-[11px] font-semibold">
                   {profile.name}
@@ -101,7 +104,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section className="overflow-hidden rounded-card bg-gradient-to-br from-[#211747] to-secondary p-5 text-white shadow-soft">
+        <section className="overflow-hidden rounded-card bg-gradient-to-br from-[#0B1F3A] to-secondary p-5 text-white shadow-soft">
           <div className="flex items-start justify-between gap-5">
             <div>
               <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider">
@@ -140,7 +143,7 @@ export default function HomePage() {
                   cy="50"
                   r="43"
                   fill="none"
-                  stroke="#FFB703"
+                  stroke="#38BDF8"
                   strokeWidth="8"
                   strokeLinecap="round"
                   strokeDasharray="270"

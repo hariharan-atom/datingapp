@@ -61,7 +61,7 @@ export function NativeHeader({
             </button>
           ) : (
             <span className="grid size-10 place-items-center rounded-[15px] bg-gradient-to-br from-primary to-secondary text-base font-bold text-white shadow-soft">
-              M
+              A
             </span>
           )}
         </div>

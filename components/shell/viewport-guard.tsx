@@ -6,20 +6,20 @@ export function ViewportGuard({ children }: { children: React.ReactNode }) {
       <main className="mx-auto min-h-dvh w-full max-w-[1024px] bg-white min-[1025px]:hidden">
         {children}
       </main>
-      <main className="hidden h-dvh items-center justify-center overflow-hidden bg-[radial-gradient(circle_at_top,#fff1f4_0%,#ffffff_42%,#f5f3ff_100%)] px-12 min-[1025px]:flex">
+      <main className="hidden h-dvh items-center justify-center overflow-hidden bg-[radial-gradient(circle_at_top,#eff6ff_0%,#ffffff_42%,#ecfeff_100%)] px-12 min-[1025px]:flex">
         <section className="grid max-w-6xl grid-cols-[1fr_0.9fr] items-center gap-16">
           <div>
             <div className="mb-8 inline-flex items-center gap-3 rounded-full border border-primary/10 bg-white/80 px-4 py-2 shadow-soft backdrop-blur">
               <span className="grid size-8 place-items-center rounded-xl bg-gradient-to-br from-primary to-secondary text-sm font-bold text-white">
-                M
+                A
               </span>
-              <span className="text-sm font-semibold text-ink">Milo</span>
+              <span className="text-sm font-semibold text-ink">The Atom</span>
             </div>
             <h1 className="max-w-xl text-balance text-5xl font-bold leading-[1.08] tracking-[-0.045em] text-ink">
               This application is available only on Mobile &amp; Tablet.
             </h1>
             <p className="mt-6 max-w-lg text-lg leading-8 text-muted">
-              Milo is designed around touch, gestures, and a native mobile
+              The Atom is designed around touch, gestures, and a native mobile
               rhythm. Open it on a device up to 1024px wide for the full
               experience.
             </p>
@@ -33,8 +33,8 @@ export function ViewportGuard({ children }: { children: React.ReactNode }) {
             </div>
           </div>
           <Image
-            src="/images/mobile-only-illustration.webp"
-            alt="Two phones connecting through Milo"
+            src="/images/mobile-only-illustration-blue.webp"
+            alt="Two phones connecting through The Atom"
             width={780}
             height={520}
             priority

@@ -1,4 +1,4 @@
--- Milo production schema
+-- The Atom production schema
 -- Requires Supabase PostgreSQL 15+
 
 create extension if not exists pgcrypto;

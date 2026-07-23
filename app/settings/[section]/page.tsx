@@ -27,7 +27,7 @@ const copy: Record<
   help: {
     title: "Help & support",
     icon: CircleHelp,
-    description: "Find answers or contact Milo support.",
+    description: "Find answers or contact The Atom support.",
   },
   legal: {
     title: "Terms & privacy",

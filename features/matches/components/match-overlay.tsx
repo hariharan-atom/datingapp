@@ -21,7 +21,7 @@ export function MatchOverlay({ profile, onClose }: MatchOverlayProps) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[80] grid place-items-center overflow-hidden bg-[radial-gradient(circle_at_top,#ff7690_0%,#ff4d6d_42%,#7c5cfc_120%)] px-6 text-white"
+          className="fixed inset-0 z-[80] grid place-items-center overflow-hidden bg-[radial-gradient(circle_at_top,#60A5FA_0%,#2563EB_42%,#0EA5E9_120%)] px-6 text-white"
         >
           {Array.from({ length: 12 }).map((_, index) => (
             <motion.span

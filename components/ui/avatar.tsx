@@ -32,15 +32,11 @@ export function Avatar({
         className,
       )}
     >
-      <Image
-        src={src}
-        alt={alt}
-        fill
-        sizes="96px"
-        className="rounded-full object-cover"
-      />
+      <span className="absolute inset-0 overflow-hidden rounded-full">
+        <Image src={src} alt={alt} fill sizes="96px" className="object-cover" />
+      </span>
       {online && (
-        <span className="absolute bottom-0 right-0 size-3.5 rounded-full border-[3px] border-white bg-success" />
+        <span className="absolute -bottom-0.5 -right-0.5 z-10 size-3.5 rounded-full border-[3px] border-white bg-success shadow-sm" />
       )}
     </span>
   );

@@ -31,7 +31,7 @@ const tools = [
     title: "Conversation coach",
     description: "Replies, starters, tone",
     prompt: "Help me with a conversation",
-    color: "bg-violet-50 text-secondary",
+    color: "bg-sky-50 text-secondary",
   },
   {
     icon: CalendarHeart,
@@ -87,7 +87,7 @@ export default function AiAssistantPage() {
   };
 
   return (
-    <AppShell title="Milo AI" back hideNav hideAi>
+    <AppShell title="The Atom AI" back hideNav hideAi>
       <div className="flex min-h-[calc(100dvh-60px-var(--safe-top))] flex-col">
         <div className="flex-1 px-4 py-5 min-[768px]:px-6">
           {messages.length === 0 ? (
@@ -95,7 +95,7 @@ export default function AiAssistantPage() {
               <motion.div
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                className="relative mx-auto grid size-20 place-items-center rounded-[28px] bg-gradient-to-br from-primary via-[#e85da7] to-secondary text-white shadow-glow"
+                className="relative mx-auto grid size-20 place-items-center rounded-[28px] bg-gradient-to-br from-primary via-[#3B82F6] to-secondary text-white shadow-glow"
               >
                 <motion.span
                   animate={{ rotate: 360 }}
@@ -112,7 +112,7 @@ export default function AiAssistantPage() {
                 Thoughtful help, never autopilot.
               </h1>
               <p className="mx-auto mt-3 max-w-md text-center text-sm leading-6 text-muted">
-                Milo can help you express yourself, plan better dates, and
+                The Atom can help you express yourself, plan better dates, and
                 notice safety concerns. You always make the call.
               </p>
               <div className="mt-7 grid grid-cols-2 gap-3 min-[768px]:grid-cols-3">
@@ -212,7 +212,7 @@ export default function AiAssistantPage() {
                   }
                 }}
                 rows={1}
-                placeholder="Ask Milo anything…"
+                placeholder="Ask The Atom anything…"
                 className="max-h-28 flex-1 resize-none bg-transparent py-3 text-sm outline-none"
               />
             </label>

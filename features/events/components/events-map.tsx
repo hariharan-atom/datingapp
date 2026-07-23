@@ -6,7 +6,7 @@ import L from "leaflet";
 import { MapContainer, Marker, Popup, TileLayer } from "react-leaflet";
 
 const markerIcon = L.divIcon({
-  html: '<div style="width:34px;height:34px;border-radius:13px;background:linear-gradient(135deg,#FF4D6D,#7C5CFC);border:3px solid white;box-shadow:0 8px 20px rgba(17,24,39,.22);display:grid;place-items:center;color:white;font-size:14px">♥</div>',
+  html: '<div style="width:34px;height:34px;border-radius:13px;background:linear-gradient(135deg,#2563EB,#0EA5E9);border:3px solid white;box-shadow:0 8px 20px rgba(17,24,39,.22);display:grid;place-items:center;color:white;font-size:14px">♥</div>',
   className: "",
   iconSize: [34, 34],
   iconAnchor: [17, 17],

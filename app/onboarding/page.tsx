@@ -121,7 +121,7 @@ export default function OnboardingPage() {
           </button>
         ) : (
           <span className="grid size-10 place-items-center rounded-[15px] bg-gradient-to-br from-primary to-secondary text-base font-bold text-white">
-            M
+            A
           </span>
         )}
         <div className="ml-auto flex items-center gap-2">
@@ -186,7 +186,7 @@ export default function OnboardingPage() {
             {step === 2 && (
               <OnboardingSection
                 icon={MessageCircleHeart}
-                eyebrow="Welcome to Milo"
+                eyebrow="Welcome to The Atom"
                 title="What’s your mobile number?"
                 description="We’ll send a one-time code. No passwords to remember."
               >
@@ -430,7 +430,7 @@ export default function OnboardingPage() {
                 icon={ShieldCheck}
                 eyebrow="Safety by design"
                 title="Verify the real you"
-                description="A quick liveness check helps keep Milo genuine. Your verification media is not public."
+                description="A quick liveness check helps keep The Atom genuine. Your verification media is not public."
               >
                 <div className="relative mx-auto grid aspect-square max-w-[260px] place-items-center overflow-hidden rounded-full bg-gradient-to-br from-primary-soft to-secondary/10">
                   <div className="absolute inset-4 rounded-full border-2 border-dashed border-secondary/25" />
@@ -501,7 +501,7 @@ function WelcomeStep() {
           >
             <Image
               src="/images/profiles/ananya.webp"
-              alt="A fictional Milo member"
+              alt="A fictional The Atom member"
               fill
               priority
               className="object-cover"
@@ -515,7 +515,7 @@ function WelcomeStep() {
           >
             <Image
               src="/images/profiles/arjun.webp"
-              alt="A fictional Milo member"
+              alt="A fictional The Atom member"
               fill
               priority
               className="object-cover"

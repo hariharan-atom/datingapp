@@ -191,7 +191,7 @@ export function ProfileCard({
           label="Like"
           onClick={like}
           size="lg"
-          className="border-0 bg-gradient-to-br from-primary to-[#ff7991] text-white shadow-glow"
+          className="border-0 bg-gradient-to-br from-primary to-[#60A5FA] text-white shadow-glow"
         />
         <IconButton
           icon={Bookmark}

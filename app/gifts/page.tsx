@@ -19,7 +19,7 @@ export default function GiftsPage() {
   return (
     <AppShell title="Thoughtful gifts" back right="notifications">
       <div className="px-4 pt-3 min-[768px]:px-6">
-        <div className="rounded-card bg-gradient-to-br from-[#fff3d7] via-[#fff7ec] to-[#ffe6ed] p-5">
+        <div className="rounded-card bg-gradient-to-br from-[#eff6ff] via-[#f0f9ff] to-[#ecfeff] p-5">
           <div className="flex items-start gap-4">
             <span className="grid size-14 shrink-0 place-items-center rounded-[20px] bg-white text-2xl shadow-soft">
               🎁
@@ -125,7 +125,7 @@ export default function GiftsPage() {
               <span className="text-xs font-bold">₹250</span>
             </article>
             <article className="flex items-center gap-3 rounded-card border border-border p-4">
-              <span className="grid size-12 place-items-center rounded-[18px] bg-rose-50 text-2xl">
+              <span className="grid size-12 place-items-center rounded-[18px] bg-sky-50 text-2xl">
                 💐
               </span>
               <div className="min-w-0 flex-1">
@@ -186,7 +186,7 @@ export default function GiftsPage() {
               Send gift
             </Button>
             <p className="mt-3 text-center text-[10px] leading-4 text-muted">
-              Milo does not process payments in mock mode. Connect a payment
+              The Atom does not process payments in mock mode. Connect a payment
               provider before enabling live redemption.
             </p>
           </>

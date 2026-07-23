@@ -215,7 +215,7 @@ export default function EditProfilePage() {
               type="button"
               className="flex h-14 w-full items-center gap-3 rounded-input bg-surface px-4"
             >
-              <Instagram className="size-5 text-pink-600" />
+              <Instagram className="size-5 text-blue-600" />
               <span className="text-sm font-semibold">Instagram</span>
               <span className="ml-auto text-xs font-bold text-primary">
                 Connect
@@ -252,9 +252,9 @@ export default function EditProfilePage() {
           outline: none;
         }
         .field-input:focus {
-          border-color: rgba(124, 92, 252, 0.35);
+          border-color: rgba(37, 99, 235, 0.35);
           background: white;
-          box-shadow: 0 0 0 4px rgba(124, 92, 252, 0.05);
+          box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.05);
         }
       `}</style>
     </AppShell>

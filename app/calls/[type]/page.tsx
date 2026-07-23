@@ -26,7 +26,7 @@ export default function CallPage() {
   const profile = profiles[0];
 
   return (
-    <div className="relative flex h-dvh flex-col overflow-hidden bg-[#15131f] text-white">
+    <div className="relative flex h-dvh flex-col overflow-hidden bg-[#081525] text-white">
       {video && camera ? (
         <Image
           src={profile.photo}
@@ -36,7 +36,7 @@ export default function CallPage() {
           className="object-cover opacity-75"
         />
       ) : (
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,#493d70,#15131f_60%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,#164E8A,#081525_60%)]" />
       )}
       <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/75" />
       <header className="safe-top relative z-10 flex h-[72px] items-center px-4">

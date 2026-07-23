@@ -2,13 +2,13 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Milo — Meet with intention",
-    short_name: "Milo",
+    name: "The Atom — Meet with intention",
+    short_name: "The Atom",
     description: "A thoughtful dating experience for India.",
     start_url: "/home",
     display: "standalone",
     background_color: "#FFFFFF",
-    theme_color: "#FF4D6D",
+    theme_color: "#2563EB",
     orientation: "portrait",
     categories: ["social", "lifestyle"],
     icons: [

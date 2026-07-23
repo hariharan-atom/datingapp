@@ -65,7 +65,7 @@ const notifications = [
     id: 5,
     type: "gift",
     icon: Gift,
-    color: "bg-rose-50 text-primary",
+    color: "bg-sky-50 text-primary",
     title: "Your gift was accepted",
     body: "Meera accepted your coffee voucher.",
     time: "Yesterday",

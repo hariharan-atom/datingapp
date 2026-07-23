@@ -57,7 +57,7 @@ export default function ChatPage() {
   };
 
   return (
-    <div className="flex h-dvh flex-col bg-[linear-gradient(180deg,#fff_0%,#fff8fa_100%)]">
+    <div className="flex h-dvh flex-col bg-[linear-gradient(180deg,#fff_0%,#eff6ff_100%)]">
       <header className="safe-top z-30 border-b border-border bg-white/85 backdrop-blur-xl">
         <div className="grid h-[64px] grid-cols-[42px_1fr_auto] items-center gap-2 px-3">
           <button
@@ -147,7 +147,7 @@ export default function ChatPage() {
                 <div
                   className={`max-w-[82%] rounded-[20px] px-4 py-3 ${
                     message.sender === "me"
-                      ? "rounded-br-md bg-gradient-to-br from-primary to-[#ff6f88] text-white shadow-soft"
+                      ? "rounded-br-md bg-gradient-to-br from-primary to-[#60A5FA] text-white shadow-soft"
                       : "rounded-bl-md border border-border bg-white text-ink shadow-sm"
                   }`}
                 >
@@ -256,9 +256,9 @@ export default function ChatPage() {
             {
               icon: ImageIcon,
               label: "Photo",
-              color: "bg-violet-50 text-secondary",
+              color: "bg-sky-50 text-secondary",
             },
-            { icon: Camera, label: "Camera", color: "bg-rose-50 text-primary" },
+            { icon: Camera, label: "Camera", color: "bg-sky-50 text-primary" },
             { icon: Gift, label: "Gift", color: "bg-amber-50 text-warning" },
           ].map((item) => {
             const Icon = item.icon;

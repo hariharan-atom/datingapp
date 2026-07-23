@@ -62,7 +62,7 @@ export function CompatibilitySheet({
       title={`You + ${profile.name}`}
       description="AI compatibility is guidance, not a prediction. Chemistry is yours to discover."
     >
-      <div className="mb-7 flex items-center gap-5 rounded-card bg-gradient-to-br from-[#211747] to-secondary p-5 text-white">
+      <div className="mb-7 flex items-center gap-5 rounded-card bg-gradient-to-br from-[#0B1F3A] to-secondary p-5 text-white">
         <div className="relative grid size-24 shrink-0 place-items-center">
           <svg className="absolute inset-0 -rotate-90" viewBox="0 0 100 100">
             <circle
@@ -78,7 +78,7 @@ export function CompatibilitySheet({
               cy="50"
               r="43"
               fill="none"
-              stroke="#FFB703"
+              stroke="#38BDF8"
               strokeWidth="7"
               strokeLinecap="round"
               strokeDasharray="270"

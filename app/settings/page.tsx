@@ -97,7 +97,7 @@ export default function SettingsPage() {
             <SettingLink
               icon={FileText}
               label="Terms & privacy"
-              description="How Milo protects you"
+              description="How The Atom protects you"
               href="/settings/legal"
             />
           </div>
@@ -122,14 +122,14 @@ export default function SettingsPage() {
           Delete account
         </button>
         <p className="mt-6 text-center text-[10px] text-muted">
-          Milo 1.0.0 · Made with care in India
+          The Atom 1.0.0 · Made with care in India
         </p>
       </div>
 
       <BottomSheet
         open={logoutOpen}
         onClose={() => setLogoutOpen(false)}
-        title="Log out of Milo?"
+        title="Log out of The Atom?"
         description="You’ll need your phone number and OTP to sign back in."
       >
         <div className="grid grid-cols-2 gap-3">

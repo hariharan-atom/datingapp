@@ -40,7 +40,7 @@ export function AiReplySheet({ open, onClose, onUse }: AiReplySheetProps) {
       open={open}
       onClose={onClose}
       title="Reply with your voice"
-      description="Milo suggests, you decide. Edit anything before sending."
+      description="The Atom suggests, you decide. Edit anything before sending."
     >
       <div className="scrollbar-none flex gap-2 overflow-x-auto pb-3">
         {tones.map((item) => {
