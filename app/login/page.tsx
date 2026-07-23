@@ -2,15 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion } from "framer-motion";
-import {
-  ArrowRight,
-  Eye,
-  EyeOff,
-  Heart,
-  LockKeyhole,
-  Mail,
-  ShieldCheck,
-} from "lucide-react";
+import { ArrowRight, Eye, EyeOff, LockKeyhole, Mail } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
@@ -104,19 +96,11 @@ function LoginContent() {
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            <span className="inline-flex items-center gap-2 rounded-full bg-primary-soft px-3 py-1.5 text-[11px] font-bold text-primary">
-              <Heart className="size-3.5" fill="currentColor" />
-              Thoughtful dating for India
-            </span>
-            <h1 className="mt-5 text-[38px] font-black leading-[1.05] tracking-[-0.055em]">
+            <h1 className="text-[38px] font-black leading-[1.05] tracking-[-0.055em]">
               Real people.
               <br />
               Better connections.
             </h1>
-            <p className="mt-4 max-w-sm text-sm leading-6 text-muted">
-              Create your profile instantly or return to your matches. No email
-              verification is required.
-            </p>
           </motion.div>
 
           <section className="mt-8 rounded-[28px] border border-white/80 bg-white/90 p-4 shadow-float backdrop-blur-xl">
@@ -147,7 +131,7 @@ function LoginContent() {
               >
                 {error === "configuration"
                   ? "Authentication is not configured on this deployment."
-                  : "That sign-in link is invalid or expired. Request a new one below."}
+                  : "Authentication could not be completed. Please try again."}
               </p>
             )}
 
@@ -220,12 +204,6 @@ function LoginContent() {
                 <ArrowRight className="size-5" />
               </Button>
             </form>
-
-            <div className="mt-4 flex items-start gap-2 rounded-2xl bg-primary-soft/70 p-3 text-[11px] leading-5 text-muted">
-              <ShieldCheck className="mt-0.5 size-4 shrink-0 text-primary" />
-              Accounts open immediately without a verification email. Your
-              password protects your profile and conversations.
-            </div>
           </section>
         </div>
 
