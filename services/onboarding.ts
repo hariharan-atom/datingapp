@@ -86,7 +86,6 @@ export const onboardingService = {
       const uploaded = await uploadUserImage({
         file,
         purpose: "profile",
-        ownerId: user.id,
       });
       const { error: photoError } = await supabase.from("photos").insert({
         user_id: user.id,

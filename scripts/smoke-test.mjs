@@ -75,13 +75,23 @@ try {
     "Registration validation route failed",
   );
 
+  const unauthorizedUpload = await fetch(`${baseUrl}/api/media/upload`, {
+    method: "POST",
+    headers: { Origin: baseUrl },
+  });
+  assert.equal(
+    unauthorizedUpload.status,
+    401,
+    "Protected media upload route accepted an anonymous request",
+  );
+
   const health = await fetch(`${baseUrl}/api/health`);
   assert.equal(health.status, 200, "Supabase health check failed");
   const healthBody = await health.json();
   assert.equal(healthBody.database, "connected");
 
   console.log(
-    "Smoke test passed: password auth routes, registration validation, admin protection, and Supabase health.",
+    "Smoke test passed: password auth, protected media uploads, admin protection, and Supabase health.",
   );
 } finally {
   server.kill();

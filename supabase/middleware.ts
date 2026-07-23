@@ -3,6 +3,7 @@ import { type NextRequest, NextResponse } from "next/server";
 
 const PUBLIC_AUTH_ROUTES = ["/login"];
 const PUBLIC_API_ROUTES = ["/api/auth/register", "/api/health"];
+const ROUTE_AUTH_HANDLED_APIS = ["/api/media/upload"];
 
 function copyCookies(source: NextResponse, target: NextResponse) {
   source.cookies.getAll().forEach((cookie) => {
@@ -16,11 +17,13 @@ export async function updateSession(request: NextRequest) {
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   const { pathname, search } = request.nextUrl;
   const isPublicApiRoute = PUBLIC_API_ROUTES.includes(pathname);
+  const routeHandlesAuth = ROUTE_AUTH_HANDLED_APIS.includes(pathname);
 
   if (!url || !anonKey) {
     if (
       PUBLIC_AUTH_ROUTES.some((route) => pathname.startsWith(route)) ||
-      isPublicApiRoute
+      isPublicApiRoute ||
+      routeHandlesAuth
     ) {
       return NextResponse.next({ request });
     }
@@ -54,7 +57,7 @@ export async function updateSession(request: NextRequest) {
   const isPublicAuthRoute = PUBLIC_AUTH_ROUTES.some((route) =>
     pathname.startsWith(route),
   );
-  if (isPublicApiRoute) {
+  if (isPublicApiRoute || routeHandlesAuth) {
     return response;
   }
 

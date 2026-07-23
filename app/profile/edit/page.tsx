@@ -77,7 +77,6 @@ export default function EditProfilePage() {
           await uploadUserImage({
             file,
             purpose: "profile",
-            ownerId: user.id,
           }),
         );
       }
