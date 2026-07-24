@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion } from "framer-motion";
-import { Eye, EyeOff } from "lucide-react";
+import { Download, Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
+import { usePwaInstall } from "@/hooks/use-pwa";
 import { authService, type AuthMode } from "@/services/auth";
 import { safeNextPath } from "@/utils/auth-routing";
 
@@ -37,7 +38,9 @@ function LoginContent() {
   const searchParams = useSearchParams();
   const [mode, setMode] = useState<AuthMode>("create");
   const [submitting, setSubmitting] = useState(false);
+  const [installing, setInstalling] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const { canInstall, install, isInstalled, isIos } = usePwaInstall();
   const next = safeNextPath(
     searchParams.get("next"),
     mode === "create" ? "/onboarding" : "/home",
@@ -73,6 +76,36 @@ function LoginContent() {
       setSubmitting(false);
     }
   });
+
+  const installApp = async () => {
+    if (isIos) {
+      toast.info("Add The Atom to your Home Screen", {
+        description:
+          "Tap the Share button in Safari, then choose “Add to Home Screen”.",
+        duration: 7000,
+      });
+      return;
+    }
+
+    if (!canInstall) {
+      toast.info("Install from your browser", {
+        description:
+          "Open the browser menu and choose “Install app” or “Add to Home screen”.",
+        duration: 7000,
+      });
+      return;
+    }
+
+    setInstalling(true);
+    try {
+      const result = await install();
+      if (result === "accepted") {
+        toast.success("The Atom was added to your device");
+      }
+    } finally {
+      setInstalling(false);
+    }
+  };
 
   const error = searchParams.get("error");
 
@@ -214,6 +247,21 @@ function LoginContent() {
               >
                 {mode === "create" ? "Create account" : "Log in"}
               </Button>
+
+              {!isInstalled && (
+                <Button
+                  type="button"
+                  variant="soft"
+                  fullWidth
+                  size="lg"
+                  loading={installing}
+                  onClick={installApp}
+                  className="mt-3 rounded-2xl shadow-none"
+                >
+                  <Download className="size-4" />
+                  Download app
+                </Button>
+              )}
             </form>
           </section>
         </div>
